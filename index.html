@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - V7.2 OPTIMIZED</title>
+    <title>LK MOTORS - V7.2 MASTER</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,6 +15,7 @@
         body { font-family: 'Noto Sans KR', sans-serif; background: #0f172a; color: #f1f5f9; overflow: hidden; -webkit-tap-highlight-color: transparent; }
         .bg-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
         .dr-zone { min-height: 80px; border: 1px dashed #334155; border-radius: 12px; padding: 5px; }
+        /* V4.9 베이 레이아웃 고정 */
         .bay-item { display: flex; flex-direction: column; justify-content: space-between; padding: 10px !important; min-height: 220px !important; border-radius: 20px !important; background: #1e293b !important; border: 1px solid #334155 !important; }
         .bay-v-no { font-size: 16px; font-weight: 900; color: #3b82f6; text-align: center; }
         .bay-v-worker { font-size: 11px; font-weight: 900; color: #fbbf24; text-align: center; }
@@ -28,45 +29,45 @@
         @media (max-width: 768px) {
             #bay-grid { grid-template-columns: repeat(5, 1fr) !important; gap: 4px !important; overflow-x: auto; }
             .bay-item { min-width: 140px; min-height: 180px !important; }
-            .list-table th, .list-table td { font-size: 8px !important; padding: 4px 2px !important; }
         }
     </style>
 </head>
 <body class="h-screen flex flex-col">
 
-    <div id="upload-modal" class="fixed inset-0 bg-slate-950 z-[9999] hidden flex-col items-center justify-center p-6 text-center">
-        <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-lg border border-white/5">
-            <h2 class="text-2xl text-blue-500 mb-4 font-black italic uppercase">Excel Data Importer</h2>
-            <input type="file" id="csv-file" accept=".csv" class="mb-6 text-xs text-slate-500 block w-full border border-dashed border-slate-700 p-4 rounded-xl">
-            <div id="upload-status" class="text-xs text-amber-500 mb-4 h-4 font-bold"></div>
-            <div class="flex gap-2">
-                <button onclick="closeModal('upload-modal')" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">닫기</button>
-                <button onclick="processCSV()" class="flex-1 py-4 bg-blue-600 rounded-2xl font-bold text-white uppercase">이관 시작</button>
-            </div>
+    <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9000] flex items-center justify-center p-6 text-center text-white">
+        <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5">
+            <h1 class="text-3xl text-blue-500 mb-6 font-black italic">LK MOTORS V7.2</h1>
+            <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center outline-none border border-transparent focus:border-blue-500 text-white font-bold">
+            <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold uppercase">System Enter</button>
         </div>
     </div>
 
-    <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9000] flex items-center justify-center p-6 text-center text-white">
-        <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5">
-            <h1 class="text-3xl text-blue-500 mb-6 font-black italic uppercase">LK MOTORS ERP</h1>
-            <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center outline-none border border-transparent focus:border-blue-500 text-white font-bold">
-            <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold uppercase">Enter System</button>
+    <div id="upload-modal" class="fixed inset-0 bg-black/90 z-[9999] hidden flex-col items-center justify-center p-6 text-center">
+        <div class="bg-slate-900 p-8 rounded-[40px] shadow-2xl w-full max-w-lg border border-blue-500/30">
+            <h2 class="text-2xl text-blue-500 mb-4 font-black italic">장부 데이터 분석기</h2>
+            <p class="text-slate-400 text-sm mb-6">업로드하신 CSV 파일을 선택하세요.<br>차량번호와 정비이력을 자동으로 매칭합니다.</p>
+            <input type="file" id="csv-file" accept=".csv" class="mb-6 text-xs text-slate-500 block w-full border border-dashed border-slate-700 p-4 rounded-xl">
+            <div id="upload-status" class="text-sm text-amber-500 mb-4 font-bold h-6">대기 중...</div>
+            <div class="flex gap-2">
+                <button onclick="closeModal('upload-modal')" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">취소</button>
+                <button onclick="processCSV()" id="import-btn" class="flex-1 py-4 bg-blue-600 rounded-2xl font-bold text-white">이관 시작</button>
+            </div>
         </div>
     </div>
 
     <nav class="h-14 bg-slate-900 border-b border-white/5 flex items-center px-4 justify-between shrink-0">
         <div class="flex gap-4 h-full">
-            <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black text-xs uppercase">현황판</button>
-            <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black text-xs uppercase">예약관리</button>
-            <button onclick="showTab('customer')" id="btn-customer" class="tab-btn font-black text-xs uppercase text-amber-500">고객이력</button>
+            <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black text-xs">현황판</button>
+            <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black text-xs">예약관리</button>
+            <button onclick="showTab('customer')" id="btn-customer" class="tab-btn font-black text-xs text-amber-500">고객이력</button>
         </div>
         <div class="flex gap-2">
-            <button onclick="document.getElementById('upload-modal').style.display='flex'" class="bg-slate-800 px-3 py-1.5 rounded-lg font-black text-[10px] text-blue-400">DB가져오기</button>
+            <button onclick="document.getElementById('upload-modal').style.display='flex'" class="bg-slate-800 px-3 py-1.5 rounded-lg font-black text-[10px] text-blue-400 border border-blue-500/30">DB가져오기</button>
             <button onclick="openEditModal(null)" class="bg-blue-600 px-3 py-1.5 rounded-lg font-black text-[10px] text-white">신규등록</button>
         </div>
     </nav>
 
-    <main id="tab-status" class="tab-content active p-2 gap-2 overflow-y-auto">
+    <main id="tab-status" class="tab-content active p-2 gap-2 overflow-y-auto custom-scroll">
         <section class="grid grid-cols-5 gap-2 shrink-0" id="bay-grid"></section>
         <section class="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-2 pb-10">
             <div class="bg-card rounded-2xl p-3 border-t-2 border-blue-500"><h3 class="text-blue-400 font-black text-[9px] mb-2 uppercase italic">Wait Today</h3><div id="today-zone" class="flex-1 dr-zone" data-bay="0"></div></div>
@@ -85,7 +86,7 @@
         <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-2xl p-2 overflow-y-auto border border-white/5">
             <table class="w-full text-left font-bold text-slate-300 text-[9px] list-table">
                 <thead class="text-slate-500 border-b border-white/5 uppercase">
-                    <tr><th class="py-2">일시</th><th>번호</th><th>모델</th><th>차대번호</th><th>연락처</th><th>정비내용</th></tr>
+                    <tr><th class="py-2">일시</th><th>번호</th><th>모델</th><th>차대번호</th><th>연락처</th><th>내용</th></tr>
                 </thead>
                 <tbody id="list-body"></tbody>
             </table>
@@ -126,9 +127,9 @@
         </div>
     </div>
 
-    <div id="c-modal" class="fixed inset-0 bg-black/95 z-[9950] hidden items-center justify-center p-2 text-white">
-        <div class="bg-slate-900 w-full max-w-lg rounded-3xl p-6 border border-amber-500/20 shadow-2xl relative text-xs">
-            <button onclick="closeModal('c-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white">&times;</button>
+    <div id="c-modal" class="fixed inset-0 bg-black/95 z-[9950] hidden items-center justify-center p-2 text-white text-xs">
+        <div class="bg-slate-900 w-full max-w-lg rounded-3xl p-6 border border-amber-500/20 shadow-2xl relative">
+            <button onclick="closeModal('c-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white font-light">&times;</button>
             <h2 class="text-lg font-black italic text-amber-500 mb-4 uppercase">Customer History Master</h2>
             <input type="hidden" id="c-id">
             <div class="grid grid-cols-2 gap-3 mb-3">
@@ -143,6 +144,7 @@
     </div>
 
     <script>
+        // Firebase 및 초기 설정
         const firebaseConfig = {
             apiKey: "AIzaSyDhTPGNKNm38PSBdATs9lks0lYu52QrP3A",
             authDomain: "lkmotors-246f1.firebaseapp.com",
@@ -163,6 +165,7 @@
             } else { alert("PASS ERROR"); }
         }
 
+        // [최적화] 시간 선택기
         function initTimeSelect() {
             const select = document.getElementById('m-time');
             let opts = "";
@@ -176,16 +179,14 @@
         function initBays() {
             const grid = document.getElementById('bay-grid'); grid.innerHTML = "";
             for(let i=1; i<=5; i++) {
-                grid.innerHTML += `<div class="bay-item"><div class="text-[8px] font-black text-slate-500 uppercase italic mb-1 flex justify-between px-1"><span>BAY ${i}</span><span id="bay-status-${i}" class="text-[7px] text-slate-600 uppercase">Stand-by</span></div><div id="bay-zone-${i}" class="dr-zone flex-1 flex flex-col pt-1" data-bay="${i}"></div></div>`;
+                grid.innerHTML += `<div class="bay-item"><div class="text-[8px] font-black text-slate-500 uppercase mb-1 flex justify-between px-1"><span>BAY ${i}</span><span id="bay-status-${i}" class="text-[7px] text-slate-600">Stand-by</span></div><div id="bay-zone-${i}" class="dr-zone flex-1 flex flex-col pt-1" data-bay="${i}"></div></div>`;
             }
         }
 
-        // [최적화] 데이터 감시 로직 개선
+        // [최적화] 실시간 동기화 엔진
         function startSync() {
             db.ref('repairs').on('value', (s) => {
                 const data = s.val();
-                if(!data) return;
-                
                 document.querySelectorAll('.dr-zone').forEach(z => z.innerHTML = ""); 
                 document.getElementById('list-body').innerHTML = "";
                 
@@ -200,17 +201,12 @@
                     const car = data[id];
                     events.push({ id, title: `${car.carNo} [${car.desc || ''}]`, start: car.date, backgroundColor: car.bay==="99"?'#059669':'#2563eb', borderColor: 'transparent' });
                     
-                    const carHtml = `<div class="car-card shadow-lg" onclick="openEditModal('${id}')"><div class="flex justify-between items-start"><span class="text-blue-400 font-black text-[11px] block">${car.carNo}</span><span class="text-[8px] text-slate-400">${car.model || ''}</span></div><div class="card-inner-desc truncate pointer-events-none">${car.desc || ''}</div></div>`;
-                    
-                    // [리스트 강화] 차대번호, 연락처, 정비내용 추가
+                    const carHtml = `<div class="car-card shadow-lg" onclick="openEditModal('${id}')"><div class="flex justify-between items-start"><span class="text-blue-400 font-black text-[11px] block">${car.carNo}</span><span class="text-[8px] text-slate-400">${car.model || ''}</span></div><div class="text-[8px] text-slate-500 mt-1 truncate pointer-events-none">${car.desc || ''}</div></div>`;
+
                     document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5 hover:bg-slate-800" onclick="openEditModal('${id}')">
                         <td class="py-2"><span>${car.date}</span><br><span class="opacity-50">${car.r_time||''}</span></td>
-                        <td class="text-blue-400">${car.carNo}</td>
-                        <td>${car.model||'-'}</td>
-                        <td class="opacity-40 italic">${car.vin||'-'}</td>
-                        <td class="text-amber-500">${car.phone||'-'}</td>
-                        <td class="truncate max-w-[100px]">${car.desc||'-'}</td>
-                    </tr>`;
+                        <td class="text-blue-400">${car.carNo}</td><td>${car.model||'-'}</td><td class="opacity-40">${car.vin||'-'}</td>
+                        <td class="text-amber-500">${car.phone||'-'}</td><td class="truncate max-w-[100px]">${car.desc||'-'}</td></tr>`;
 
                     if(car.bay == "0") {
                         const reserveDate = new Date(car.date);
@@ -230,25 +226,48 @@
             });
         }
 
+        // [장부 파일 정밀 파싱] - 17자리 VIN 자동 추출 및 줄바꿈 데이터 병합
         async function processCSV() {
             const fileInput = document.getElementById('csv-file');
             const status = document.getElementById('upload-status');
+            const btn = document.getElementById('import-btn');
             if (!fileInput.files.length) return alert("파일을 선택하세요.");
+            
+            btn.disabled = true;
             const reader = new FileReader();
             reader.onload = async function(e) {
-                const lines = e.target.result.split('\n');
+                const text = e.target.result;
+                const rows = text.split('\n');
                 let count = 0;
-                for(let line of lines) {
-                    const row = line.split(',');
-                    if (row.length > 5 && row[2] && row[2].length > 4) {
-                        const carNo = row[2].trim();
-                        if (/[0-9]/.test(carNo)) {
-                            await syncCSVToDB(carNo, row[3].trim(), row[4].trim(), row[0].trim(), row[14]?row[14].trim():"", row[8]?row[8].trim():"장부이관", row[13]?parseInt(row[13].replace(/[^0-9]/g,''))||0:0);
-                            count++;
+                status.innerText = "장부 정밀 분석 중...";
+
+                for(let i=0; i<rows.length; i++) {
+                    const cols = rows[i].split(',');
+                    // 차번(3번째 열)이 유효한 경우만 필터링
+                    if (cols.length > 5 && cols[2] && cols[2].length > 4) {
+                        const carNo = cols[2].trim();
+                        const name = cols[3] ? cols[3].trim() : "";
+                        const model = cols[4] ? cols[4].trim() : "";
+                        const date = cols[0] ? cols[0].trim() : "";
+                        
+                        // 차대번호(VIN) 검색: 15번째 열 혹은 17자리 대문자 검색
+                        let vin = cols[14] ? cols[14].trim() : "";
+                        if(vin.length < 10) {
+                             const vinMatch = rows[i+1] ? rows[i+1].match(/[A-Z0-9]{17}/) : null;
+                             if(vinMatch) vin = vinMatch[0];
                         }
+                        
+                        // 정비명(9번째 열) + 금액(14번째 열)
+                        const desc = cols[8] ? cols[8].trim() : "이전 기록";
+                        const labor = cols[13] ? parseInt(cols[13].replace(/[^0-9]/g, '')) || 0 : 0;
+
+                        await syncCSVToDB(carNo, name, model, date, vin, desc, labor);
+                        count++;
+                        if(count % 10 === 0) status.innerText = `${count}건 처리 중...`;
                     }
                 }
-                status.innerText = `${count}건 이관 완료!`;
+                status.innerText = `이관 완료: ${count}건`;
+                btn.disabled = false;
                 setTimeout(() => closeModal('upload-modal'), 2000);
             };
             reader.readAsText(fileInput.files[0], 'EUC-KR');
@@ -257,7 +276,7 @@
         function syncCSVToDB(carNo, name, model, date, vin, desc, labor) {
             return new Promise(resolve => {
                 db.ref('customers').orderByChild('carNo').equalTo(carNo).once('value', s => {
-                    const hItem = { date, desc: desc + ` (₩${labor.toLocaleString()})`, mechanic: "장부 이관", labor };
+                    const hItem = { date, desc: desc + ` (₩${labor.toLocaleString()})`, labor };
                     if(s.exists()){ db.ref('customers/'+Object.keys(s.val())[0]+'/history').push(hItem); }
                     else { db.ref('customers').push({ carNo, name, model, vin, firstDate: date, history: [hItem] }); }
                     resolve();
@@ -265,14 +284,14 @@
             });
         }
 
+        // 공통 로직 (V6.2 유지)
         function saveData() {
             const id = document.getElementById('m-id').value;
             const data = { carNo: document.getElementById('m-car').value.toUpperCase(), name: document.getElementById('m-name').value, phone: document.getElementById('m-phone').value, mechanic: document.getElementById('m-mechanic').value, date: document.getElementById('m-date').value, r_time: document.getElementById('m-time').value, model: document.getElementById('m-model').value, km: document.getElementById('m-km').value, desc: document.getElementById('m-desc').value, vin: document.getElementById('m-vin').value.toUpperCase(), firstDate: document.getElementById('m-first-date').value, parts: document.getElementById('m-parts').value, labor: document.getElementById('m-labor').value };
-            if(!data.carNo) return alert("차량번호 필수");
+            if(!data.carNo) return alert("번호 필수");
             db.ref('customers').orderByChild('carNo').equalTo(data.carNo).once('value', s => {
                 const cData = { carNo: data.carNo, name: data.name, phone: data.phone, model: data.model, firstDate: data.firstDate, vin: data.vin };
-                if(!s.exists()) db.ref('customers').push(cData);
-                else db.ref('customers/'+Object.keys(s.val())[0]).update(cData);
+                if(!s.exists()) db.ref('customers').push(cData); else db.ref('customers/'+Object.keys(s.val())[0]).update(cData);
             });
             if(id) db.ref('repairs/'+id).update(data).then(() => closeModal('edit-modal'));
             else { data.bay = "0"; db.ref('repairs').push(data).then(() => closeModal('edit-modal')); }
@@ -318,7 +337,7 @@
             document.getElementById('c-id').value = id;
             db.ref('customers/'+id).once('value', s => {
                 const d = s.val(); document.getElementById('c-car').value = d.carNo; document.getElementById('c-name').value = d.name; document.getElementById('c-model').value = d.model || ""; document.getElementById('c-first-date').value = d.firstDate || "";
-                const hList = document.getElementById('c-history-list'); hList.innerHTML = ""; if(d.history) Object.values(d.history).reverse().forEach(h => { hList.innerHTML += `<div class="bg-slate-900/50 p-2 rounded-lg border border-white/5 text-[9px] mb-1"><b>[${h.date}]</b> ${h.desc}<br><span class="text-blue-300">₩${(h.labor||0).toLocaleString()}</span></div>`; });
+                const hList = document.getElementById('c-history-list'); hList.innerHTML = ""; if(d.history) Object.values(d.history).reverse().forEach(h => { hList.innerHTML += `<div class="bg-slate-900/50 p-2 rounded-lg border border-white/5 text-[9px] mb-1"><b>[${h.date}]</b> ${h.desc} <br> <span class="text-blue-300">₩${(h.labor||0).toLocaleString()}</span></div>`; });
             });
             document.getElementById('c-modal').style.display = 'flex';
         }
