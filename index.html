@@ -95,7 +95,7 @@
 
     <main id="tab-customer" class="tab-content p-4 gap-4 bg-slate-950">
         <div class="flex flex-col md:flex-row gap-2 items-center justify-between">
-            <input type="text" id="cust-search" oninput="syncCustomerDB(this.value)" placeholder="차량번호(끝4자리)/이름 검색..." class="flex-1 bg-slate-800 p-3 rounded-xl outline-none border border-white/5 focus:border-amber-500 text-sm font-bold text-white w-full">
+            <input type="text" id="cust-search" oninput="syncCustomerDB(this.value)" placeholder="차량번호(끝4자리) 또는 이름 검색..." class="flex-1 bg-slate-800 p-3 rounded-xl outline-none border border-white/5 focus:border-amber-500 text-sm font-bold text-white w-full">
             <div class="flex gap-2 shrink-0">
                 <button onclick="toggleSelectAllCustomers()" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold border border-white/10 uppercase">Select All</button>
                 <button onclick="deleteSelectedCustomers()" class="bg-red-600 px-4 py-2 rounded-xl text-xs font-black shadow-lg uppercase">Bulk Delete</button>
@@ -138,7 +138,7 @@
             <h2 class="text-lg font-black italic text-amber-500 mb-4 uppercase">Customer Master Database</h2>
             <input type="hidden" id="c-id">
             <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="input-group"><label>차량 번호</label><input type="text" id="c-car" class="font-black text-amber-400 uppercase"></div>
+                <div class="input-group"><label>차량 번호</label><input type="text" id="c-car" oninput="fetchInfo(this.value, 'c')" class="font-black text-amber-400 uppercase"></div>
                 <div class="input-group"><label>차량 모델</label><input type="text" id="c-model"></div>
                 <div class="input-group"><label>성함</label><input type="text" id="c-name"></div>
                 <div class="input-group"><label>연락처</label><input type="text" id="c-phone"></div>
@@ -167,7 +167,6 @@
         const db = firebase.database();
         let calendar;
 
-        // 접속 해결: 로그인 체크 루틴 원상 복구
         function login() {
             if(document.getElementById('pw').value === "9999") {
                 document.getElementById('login-layer').style.display = 'none';
@@ -233,7 +232,46 @@
             });
         }
 
-        // [이관 엔진 - V8.1 마스터 전전용] 연락처(5번째), 등록일(14번째) 매칭
+        // [수정] 차량 조회 강화 로직: 숫자 4자리 또는 이름 검색 + 자동 초기화
+        function fetchInfo(searchValue, prefix) {
+            if (searchValue.length < 2) {
+                clearInputFields(prefix);
+                return;
+            }
+            const search = searchValue.toUpperCase();
+            db.ref('customers').once('value', s => {
+                let found = false;
+                if (s.exists()) {
+                    s.forEach(child => {
+                        const d = child.val();
+                        const isCarMatch = d.carNo && d.carNo.endsWith(search);
+                        const isNameMatch = d.name && d.name.includes(searchValue);
+                        if (isCarMatch || isNameMatch) {
+                            document.getElementById(prefix + '-name').value = d.name || "";
+                            document.getElementById(prefix + '-phone').value = d.phone || "";
+                            document.getElementById(prefix + '-model').value = d.model || "";
+                            document.getElementById(prefix + '-vin').value = d.vin || "";
+                            document.getElementById(prefix + '-first-date').value = d.firstDate || "";
+                            if (prefix === 'm') loadHistoryIntoModal(d.carNo);
+                            found = true;
+                            return true;
+                        }
+                    });
+                }
+                if (!found) clearInputFields(prefix);
+            });
+        }
+
+        function clearInputFields(prefix) {
+            document.getElementById(prefix + '-name').value = "";
+            document.getElementById(prefix + '-phone').value = "";
+            document.getElementById(prefix + '-model').value = "";
+            document.getElementById(prefix + '-vin').value = "";
+            document.getElementById(prefix + '-first-date').value = "";
+            if (prefix === 'm') document.getElementById('m-history-list').innerHTML = "";
+        }
+
+        // [수정] DB 이관 매칭 로직
         async function processCSV() {
             const fileInput = document.getElementById('csv-file');
             const status = document.getElementById('upload-status');
@@ -247,11 +285,10 @@
                     if (cols.length >= 7 && cols[2]) {
                         const carNo = cols[2].trim();
                         const name = cols[3].trim();
-                        const phone = cols[4] ? cols[4].trim() : "";  // 5번째 칸: 연락처
-                        const model = cols[5] ? cols[5].trim() : "";  // 6번째 칸: 모델
-                        const vin = cols[6] ? cols[6].trim() : "";    // 7번째 칸: 차대번호
-                        const firstDate = cols[13] ? cols[13].trim() : ""; // 14번째 칸: 최초등록일
-
+                        const phone = cols[4] ? cols[4].trim() : "";
+                        const model = cols[5] ? cols[5].trim() : "";
+                        const vin = cols[6] ? cols[6].trim() : "";
+                        const firstDate = cols[13] ? cols[13].trim() : "";
                         if (carNo.length > 3) {
                             const data = { carNo, name, phone, model, vin, firstDate };
                             await db.ref('customers').orderByChild('carNo').equalTo(carNo).once('value', s => {
@@ -268,15 +305,14 @@
             reader.readAsText(fileInput.files[0], 'EUC-KR');
         }
 
-        // [검색 엔진 - 숫자 4자리 및 이름 통합 검색]
+        // [수정] 고객 DB 검색 강화 (숫자 4자리/이름)
         function syncCustomerDB(key) {
             db.ref('customers').once('value', s => {
                 const grid = document.getElementById('customer-grid'); grid.innerHTML = "";
                 const search = key.toUpperCase();
                 s.forEach(c => {
                     const d = c.val();
-                    // 차량번호(끝 4자리 검색 포함) 또는 성함에 검색어 포함 시 노출
-                    if(d.carNo.includes(search) || d.name.includes(key)) {
+                    if(d.carNo.includes(search) || (d.name && d.name.includes(key))) {
                         grid.innerHTML += `<div class="bg-card p-4 rounded-2xl border border-white/5 relative active:scale-95 transition-all">
                             <input type="checkbox" value="${c.key}" class="cust-chk db-checkbox absolute top-3 right-3">
                             <div onclick="openCustomerModal('${c.key}')">
@@ -289,7 +325,7 @@
             });
         }
 
-        // 기본 유지 기능들
+        // 원본 기능 유지
         function toggleSelectAllCustomers() { document.querySelectorAll('.cust-chk').forEach(cb => cb.checked = !cb.checked); }
         async function deleteSelectedCustomers() {
             const selected = Array.from(document.querySelectorAll('.cust-chk:checked')).map(cb => cb.value);
@@ -315,8 +351,8 @@
         function saveCustomer() { const id = document.getElementById('c-id').value; const data = { carNo: document.getElementById('c-car').value.toUpperCase(), name: document.getElementById('c-name').value, model: document.getElementById('c-model').value, phone: document.getElementById('c-phone').value, vin: document.getElementById('c-vin').value.toUpperCase(), firstDate: document.getElementById('c-first-date').value }; db.ref('customers/'+id).update(data).then(() => { syncCustomerDB(""); closeModal('c-modal'); }); }
         function deleteRecord(path, idField) { const id = document.getElementById(idField).value; if(id && confirm("삭제?")) db.ref(path+'/'+id).remove().then(() => closeModal(idField==='m-id'?'edit-modal':'c-modal')); }
         function openEditModal(id) { document.getElementById('m-id').value = id || ""; if(id) db.ref('repairs/'+id).once('value', s => { const d = s.val(); document.getElementById('m-car').value = d.carNo; document.getElementById('m-name').value = d.name; document.getElementById('m-phone').value = d.phone; document.getElementById('m-mechanic').value = d.mechanic||""; document.getElementById('m-date').value = d.date; document.getElementById('m-time').value = d.r_time; document.getElementById('m-model').value = d.model; document.getElementById('m-desc').value = d.desc; document.getElementById('m-vin').value = d.vin; document.getElementById('m-first-date').value = d.firstDate||""; }); else document.querySelectorAll('#edit-modal input, #edit-modal textarea').forEach(i => i.value = ""); document.getElementById('edit-modal').style.display = 'flex'; }
+        function loadHistoryIntoModal(carNo) { db.ref('customers').orderByChild('carNo').equalTo(carNo).once('value', s => { const hList = document.getElementById('m-history-list'); hList.innerHTML = ""; if(s.exists()){ const d = Object.values(s.val())[0]; if(d.history) Object.values(d.history).reverse().forEach(h => { hList.innerHTML += `<div class='history-item'><b>[${h.date}]</b> ${h.desc}</div>`; }); } }); }
         function releaseVehicle() { const id = document.getElementById('m-id').value; db.ref('repairs/'+id).once('value', s => { const d = s.val(); db.ref('customers').orderByChild('carNo').equalTo(d.carNo).once('value', cs => { if(cs.exists()) db.ref('customers/'+Object.keys(cs.val())[0]+'/history').push({ date: d.date, desc: d.desc }); }); db.ref('repairs/'+id).remove().then(() => closeModal('edit-modal')); }); }
-        function fetchInfo(carNo, prefix) { if(carNo.length < 4) return; db.ref('customers').orderByChild('carNo').equalTo(carNo.toUpperCase()).once('value', s => { if(s.exists()){ const d = Object.values(s.val())[0]; document.getElementById(prefix+'-name').value = d.name; document.getElementById(prefix+'-phone').value = d.phone || ""; document.getElementById(prefix+'-model').value = d.model; document.getElementById(prefix+'-vin').value = d.vin || ""; document.getElementById(prefix+'-first-date').value = d.firstDate || ""; } }); }
         function initCalendar() { calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView:'dayGridMonth', locale:'ko', height:'100%', eventClick: (info) => openEditModal(info.event.id) }); calendar.render(); }
         function toggleResMode(m) { document.getElementById('cal-view').style.display = (m==='cal'?'block':'none'); document.getElementById('list-view').style.display = (m==='list'?'block':'none'); if(m==='cal') calendar.updateSize(); }
         function showTab(id) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.getElementById('tab-'+id).classList.add('active'); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-'+id).classList.add('active'); if(id==='customer') syncCustomerDB(""); }
