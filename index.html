@@ -3,76 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - 지능형 드래그 관제 시스템</title>
+    <title>LK MOTORS - 통합 관제 시스템</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans KR', sans-serif; background: #0f172a; color: #f1f5f9; overflow: hidden; }
-        .dashboard-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
-        .bay-target { min-height: 120px; border: 2px dashed #334155; border-radius: 20px; transition: 0.3s; }
-        .bay-target.drag-over { border-color: #3b82f6; background: rgba(59,130,246,0.1); }
-        .car-item { cursor: grab; background: #334155; border-radius: 12px; padding: 10px; margin-bottom: 8px; font-weight: bold; border: 1px solid rgba(255,255,255,0.1); }
-        .car-item:active { cursor: grabbing; }
-        .sortable-ghost { opacity: 0.3; background: #3b82f6 !important; }
+        body { font-family: 'Noto Sans KR', sans-serif; background: #111827; color: #e5e7eb; overflow: hidden; }
+        
+        /* 인동그룹 다크 테마 컬러 */
+        .bg-card { background: #1f2937; border: 1px solid rgba(255,255,255,0.05); }
+        .bay-box { min-height: 140px; border: 2px dashed #374151; border-radius: 20px; transition: 0.3s; }
+        .bay-box.active { border: 2px solid #3b82f6; background: rgba(59,130,246,0.1); }
+        
+        /* 드래그 가능한 차량 카드 */
+        .car-card { cursor: grab; background: #374151; padding: 12px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px; }
+        .car-card:active { cursor: grabbing; scale: 1.05; }
+        .sortable-ghost { opacity: 0.2; background: #3b82f6 !important; }
+        
+        /* 탭 메뉴 */
+        .tab-btn.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; }
+        .tab-content { display: none; }
+        .tab-content.active { display: flex; }
     </style>
 </head>
-<body class="h-screen flex flex-col p-4">
+<body class="h-screen flex flex-col">
 
-    <div id="login-screen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center">
-        <div class="bg-slate-800 p-10 rounded-[40px] shadow-2xl w-full max-w-sm text-center">
-            <h1 class="text-3xl font-black mb-8 italic">LK MOTORS</h1>
-            <input type="password" id="admin-pw" placeholder="PASSWORD" class="w-full bg-slate-900 rounded-2xl py-4 px-6 mb-4 text-center outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="checkLogin()" class="w-full py-4 bg-blue-600 rounded-2xl font-black">LOGIN</button>
+    <div id="login-layer" class="fixed inset-0 bg-gray-950 z-[1000] flex items-center justify-center p-6">
+        <div class="bg-gray-900 p-12 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5 text-center">
+            <h1 class="text-3xl font-black italic text-blue-500 mb-8">LK MOTORS ERP</h1>
+            <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-gray-800 rounded-2xl py-4 px-6 mb-4 text-center outline-none border border-transparent focus:border-blue-500">
+            <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-black hover:bg-blue-500 transition">시스템 접속</button>
         </div>
     </div>
 
-    <header class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-black italic text-blue-500">WORKFLOW CONTROL</h1>
-        <div class="flex gap-4">
-            <button onclick="openModal('res-modal')" class="bg-indigo-600 px-6 py-2 rounded-full font-bold text-sm"><i class="fas fa-calendar-plus mr-2"></i>예약등록</button>
+    <nav class="h-16 bg-gray-900 border-b border-white/5 flex items-center px-6 justify-between shrink-0">
+        <div class="flex gap-8 h-full">
+            <button onclick="showTab('status')" id="btn-status" class="tab-btn active px-2 font-black italic">작업 현황판</button>
+            <button onclick="showTab('calendar')" id="btn-calendar" class="tab-btn px-2 font-black italic">예약 관리</button>
+            <button onclick="showTab('history')" id="btn-history" class="tab-btn px-2 font-black italic">고객 상세 이력</button>
         </div>
-    </header>
+        <div class="flex items-center gap-4">
+            <button onclick="openModal('reg-modal')" class="bg-blue-600 px-5 py-2 rounded-xl font-bold text-sm text-white">
+                <i class="fas fa-plus mr-2"></i>예약 추가
+            </button>
+        </div>
+    </nav>
 
-    <div class="flex-1 flex gap-6 overflow-hidden">
-        <aside class="w-72 flex flex-col gap-4">
-            <div class="dashboard-card flex-1 rounded-[30px] p-5 flex flex-col">
-                <h3 class="text-blue-400 font-black text-sm mb-4 italic uppercase">📋 Wait List</h3>
-                <div id="wait-list" class="flex-1 overflow-y-auto pr-2 dr-zone" data-bay="0">
-                    </div>
-            </div>
+    <main id="tab-status" class="tab-content active flex-1 overflow-hidden p-4 gap-4">
+        <aside class="w-72 bg-card rounded-[30px] p-5 flex flex-col shadow-xl">
+            <h3 class="text-blue-400 font-black text-sm mb-4 flex justify-between items-center">
+                <span><i class="fas fa-clock mr-2"></i>수리 대기</span>
+                <span id="wait-count" class="bg-blue-500/20 px-2 py-0.5 rounded text-[10px]">0</span>
+            </h3>
+            <div id="wait-zone" class="flex-1 overflow-y-auto dr-zone custom-scroll" data-bay="0"></div>
         </aside>
 
-        <main class="flex-1 grid grid-cols-5 gap-4 overflow-y-auto pr-2" id="bay-grid">
-            </main>
+        <section class="flex-1 grid grid-cols-2 lg:grid-cols-5 gap-3 overflow-y-auto p-1 custom-scroll" id="bay-grid">
+            </section>
 
-        <aside class="w-72 flex flex-col gap-4">
-            <div class="dashboard-card flex-1 rounded-[30px] p-5 flex flex-col border-l-4 border-emerald-500">
-                <h3 class="text-emerald-400 font-black text-sm mb-4 italic uppercase">✅ Done / Out</h3>
-                <div id="done-list" class="flex-1 overflow-y-auto pr-2 dr-zone" data-bay="99">
-                    </div>
-            </div>
+        <aside class="w-72 bg-card rounded-[30px] p-5 flex flex-col shadow-xl border-l-4 border-emerald-500">
+            <h3 class="text-emerald-400 font-black text-sm mb-4">
+                <i class="fas fa-check-circle mr-2"></i>출고 완료
+            </h3>
+            <div id="done-zone" class="flex-1 overflow-y-auto dr-zone custom-scroll" data-bay="99"></div>
         </aside>
-    </div>
+    </main>
 
-    <div id="res-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
-        <div class="bg-white text-slate-900 w-full max-w-md rounded-[40px] p-8">
-            <h2 class="text-2xl font-black mb-6">📅 정비 일정 등록</h2>
-            <div class="space-y-4">
-                <input type="text" id="reg-carNo" placeholder="차량번호" class="w-full bg-slate-100 p-4 rounded-2xl outline-none font-bold">
-                <input type="text" id="reg-owner" placeholder="고객명" class="w-full bg-slate-100 p-4 rounded-2xl outline-none font-bold">
-                <input type="date" id="reg-date" class="w-full bg-slate-100 p-4 rounded-2xl outline-none font-bold">
-                <textarea id="reg-desc" placeholder="정비요청사항" class="w-full bg-slate-100 p-4 rounded-2xl outline-none h-24"></textarea>
+    <main id="tab-calendar" class="tab-content flex-1 p-6 flex-col overflow-y-auto bg-gray-950">
+        <div id='calendar' class="bg-gray-900 p-8 rounded-[30px] shadow-2xl border border-white/5"></div>
+    </main>
+
+    <main id="tab-history" class="tab-content flex-1 p-6 flex-col overflow-y-auto bg-gray-950">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="history-grid"></div>
+    </main>
+
+    <div id="reg-modal" class="fixed inset-0 bg-black/80 z-[2000] hidden items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-gray-900 w-full max-w-xl rounded-[40px] shadow-2xl border border-white/10 overflow-hidden">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-black text-white italic">예약 추가</h2>
+                    <button onclick="closeModal('reg-modal')" class="text-gray-500 text-3xl">&times;</button>
+                </div>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="text" id="r-car" placeholder="차량번호" class="bg-gray-800 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-white font-bold">
+                        <input type="text" id="r-name" placeholder="고객명" class="bg-gray-800 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-white font-bold">
+                    </div>
+                    <input type="text" id="r-phone" placeholder="연락처 (예: 010-1234-5678)" class="bg-gray-800 p-4 rounded-2xl w-full outline-none focus:ring-2 focus:ring-blue-500 text-white font-bold">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="date" id="r-date" class="bg-gray-800 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-white font-bold">
+                        <input type="time" id="r-time" class="bg-gray-800 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-white font-bold">
+                    </div>
+                    <textarea id="r-desc" placeholder="정비 내용 (엔진오일 교환 등)" class="bg-gray-800 p-4 rounded-2xl w-full h-24 outline-none focus:ring-2 focus:ring-blue-500 text-white font-bold"></textarea>
+                </div>
+                <button onclick="saveReservation()" class="w-full py-5 bg-blue-600 rounded-3xl font-black text-lg mt-8 shadow-xl hover:bg-blue-500 transition">예약 확정 및 저장</button>
             </div>
-            <button onclick="saveRes()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black mt-6">일정 추가</button>
-            <button onclick="closeModal('res-modal')" class="w-full py-2 text-slate-400 font-bold mt-2">닫기</button>
         </div>
     </div>
 
     <script>
+        // 파이어베이스 설정
         const firebaseConfig = {
             apiKey: "AIzaSyDhTPGNKNm38PSBdATs9lks0lYu52QrP3A",
             authDomain: "lkmotors-246f1.firebaseapp.com",
@@ -84,86 +119,133 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        let calendar;
 
-        function checkLogin() {
-            if(document.getElementById('admin-pw').value === "9999") {
-                document.getElementById('login-screen').style.display = 'none';
+        function login() {
+            if(document.getElementById('pw').value === "9999") {
+                document.getElementById('login-layer').style.display = 'none';
                 initBays();
-                initDraggable();
-            } else { alert("비번 틀림"); }
+                initCalendar();
+                initSortable();
+            } else { alert("비밀번호 불일치"); }
         }
 
-        // 베이 생성
+        // 1. 작업 베이(BAY) 생성 (사진 04번 동일)
         function initBays() {
             const grid = document.getElementById('bay-grid');
             grid.innerHTML = "";
             for(let i=1; i<=10; i++) {
                 grid.innerHTML += `
-                    <div class="dashboard-card rounded-[30px] p-4 flex flex-col gap-2">
-                        <span class="text-[10px] font-black text-slate-500 uppercase">BAY ${i}</span>
-                        <div id="bay-zone-${i}" class="bay-target dr-zone flex-1" data-bay="${i}"></div>
+                    <div class="bg-card rounded-[32px] p-4 flex flex-col gap-3 relative overflow-hidden">
+                        <span class="absolute top-4 left-5 text-[10px] font-black text-gray-600 uppercase tracking-tighter">BAY ${i}</span>
+                        <div class="h-8"></div>
+                        <div id="bay-zone-${i}" class="bay-box dr-zone flex flex-col gap-2" data-bay="${i}"></div>
                     </div>`;
             }
             startSync();
         }
 
-        // 드래그 기능 초기화 (SortableJS)
-        function initDraggable() {
-            const zones = document.querySelectorAll('.dr-zone');
-            zones.forEach(zone => {
-                new Sortable(zone, {
-                    group: 'cars',
-                    animation: 150,
+        // 2. 드래그 앤 드롭 초기화 (마우스로 베이 이동)
+        function initSortable() {
+            document.querySelectorAll('.dr-zone').forEach(el => {
+                new Sortable(el, {
+                    group: 'vehicles',
+                    animation: 200,
                     ghostClass: 'sortable-ghost',
-                    onEnd: function (evt) {
-                        const carId = evt.item.getAttribute('data-id');
+                    onEnd: (evt) => {
+                        const id = evt.item.getAttribute('data-id');
                         const targetBay = evt.to.getAttribute('data-bay');
-                        updateCarLocation(carId, targetBay);
+                        updateVehicleBay(id, targetBay);
                     }
                 });
             });
         }
 
+        // 3. 실시간 동기화 (사진 속 차량 현황 반영)
         function startSync() {
-            db.ref('repairs').on('value', (s) => {
-                const data = s.val();
+            db.ref('repairs').on('value', (snapshot) => {
+                const data = snapshot.val();
                 document.querySelectorAll('.dr-zone').forEach(z => z.innerHTML = ""); // 초기화
-                
-                for(let key in data) {
-                    const car = data[key];
+                const historyGrid = document.getElementById('history-grid'); historyGrid.innerHTML = "";
+                let waitCount = 0;
+
+                const events = [];
+
+                for(let id in data) {
+                    const car = data[id];
                     const carHtml = `
-                        <div class="car-item text-xs" data-id="${key}">
-                            <div class="flex justify-between mb-1"><span class="text-blue-400">${car.carNo}</span></div>
-                            <div class="text-[10px] opacity-60">${car.owner} / ${car.status}</div>
+                        <div class="car-card" data-id="${id}" onclick="showDetail('${id}')">
+                            <p class="text-blue-400 font-black text-base mb-1">${car.carNo}</p>
+                            <div class="flex justify-between items-center text-[10px] opacity-60">
+                                <span class="font-bold">${car.name}</span>
+                                <span class="bg-gray-800 px-2 py-0.5 rounded-full">${car.status || '대기중'}</span>
+                            </div>
                         </div>`;
                     
-                    if(car.bay == "0") document.getElementById('wait-list').innerHTML += carHtml;
-                    else if(car.bay == "99") document.getElementById('done-list').innerHTML += carHtml;
-                    else {
-                        const target = document.getElementById(`bay-zone-${car.bay}`);
-                        if(target) target.innerHTML += carHtml;
+                    if(car.bay == "0") {
+                        document.getElementById('wait-zone').innerHTML += carHtml;
+                        waitCount++;
+                    } else if(car.bay == "99") {
+                        document.getElementById('done-zone').innerHTML += carHtml;
+                    } else {
+                        const bayTarget = document.getElementById(`bay-zone-${car.bay}`);
+                        if(bayTarget) bayTarget.innerHTML += carHtml;
                     }
+
+                    // 캘린더 및 이력 데이터
+                    events.push({ title: car.carNo + " / " + car.name, start: car.date, id: id });
+                    historyGrid.innerHTML += `
+                        <div class="bg-card p-6 rounded-[30px] shadow-lg">
+                            <p class="text-blue-400 font-black mb-1">${car.carNo}</p>
+                            <p class="text-sm font-bold mb-4">${car.name}</p>
+                            <p class="text-[11px] opacity-60 line-clamp-2">${car.desc}</p>
+                        </div>`;
                 }
+                document.getElementById('wait-count').innerText = waitCount;
+                if(calendar) { calendar.removeAllEvents(); calendar.addEventSource(events); }
             });
         }
 
-        // 마우스로 옮겼을 때 데이터베이스 위치 변경
-        function updateCarLocation(id, bay) {
+        // 마우스로 위치를 바꿀 때 데이터베이스 업데이트
+        function updateVehicleBay(id, bay) {
             let status = "정비중";
-            if(bay == "0") status = "대기중";
-            if(bay == "99") status = "수리완료";
-            
+            if(bay == "0") status = "수리대기";
+            if(bay == "99") status = "출고완료";
             db.ref('repairs/' + id).update({ bay: bay, status: status });
         }
 
-        function saveRes() {
-            const carNo = document.getElementById('reg-carNo').value;
-            if(!carNo) return alert("번호 필수");
+        function saveReservation() {
+            const carNo = document.getElementById('r-car').value;
+            const name = document.getElementById('r-name').value;
+            if(!carNo || !name) return alert("필수 정보를 입력하세요.");
+
             db.ref('repairs').push({
-                carNo: carNo, owner: document.getElementById('reg-owner').value,
-                date: document.getElementById('reg-date').value, desc: document.getElementById('reg-desc').value,
-                bay: "0", status: "대기중"
-            }).then(() => closeModal('res-modal'));
+                carNo: carNo, name: name, phone: document.getElementById('r-phone').value,
+                date: document.getElementById('r-date').value, time: document.getElementById('r-time').value,
+                desc: document.getElementById('r-desc').value, bay: "0", status: "수리대기"
+            }).then(() => {
+                alert("예약이 등록되었습니다.");
+                closeModal('reg-modal');
+            });
+        }
+
+        function initCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'ko',
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
+                events: []
+            });
+            calendar.render();
+        }
+
+        function showTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + id).classList.add('active');
+            if(id === 'calendar') setTimeout(() => { calendar.render(); }, 200);
         }
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
