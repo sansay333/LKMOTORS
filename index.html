@@ -12,151 +12,182 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans KR', sans-serif; background: #0f172a; color: #f1f5f9; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Noto Sans KR', sans-serif; background: #0f172a; color: #f1f5f9; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
         .bg-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
-        .dr-zone { min-height: 80px; border: 1px dashed #334155; border-radius: 12px; padding: 5px; }
-        .bay-item { display: flex; flex-direction: column; justify-content: space-between; padding: 10px !important; min-height: 220px !important; border-radius: 20px !important; background: #1e293b !important; border: 1px solid #334155 !important; cursor: pointer; }
-        .bay-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; pointer-events: none; }
-        .bay-v-no { font-size: 16px; font-weight: 900; color: #3b82f6; line-height: 1.2; }
-        .bay-v-model { font-size: 10px; color: #94a3b8; font-weight: 700; margin-top: 2px; }
-        .bay-v-desc { font-size: 9px; color: #cbd5e1; margin-top: 5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .bay-footer { text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; pointer-events: none; }
-        .bay-v-worker { font-size: 11px; font-weight: 900; color: #fbbf24; }
-        .car-card { cursor: pointer; background: #334155; padding: 10px; border-radius: 12px; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.1); touch-action: auto; position: relative; z-index: 100; }
-        .tab-btn.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; }
-        .tab-content { display: none; width: 100%; height: 100%; }
+        .dr-zone { min-height: 120px; border: 1px dashed #334155; border-radius: 12px; padding: 10px; transition: all 0.3s; }
+        .dr-zone.dragover { background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; }
+        
+        /* 베이 레이아웃 고정 */
+        .bay-item { display: flex; flex-direction: column; justify-content: space-between; padding: 15px !important; min-height: 250px !important; border-radius: 24px !important; background: #1e293b !important; border: 1px solid #334155 !important; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+        .bay-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; pointer-events: none; }
+        .bay-v-no { font-size: 20px; font-weight: 900; color: #3b82f6; letter-spacing: -0.5px; }
+        .bay-v-model { font-size: 11px; color: #94a3b8; font-weight: 700; margin-top: 2px; }
+        .bay-v-desc { font-size: 10px; color: #cbd5e1; margin-top: 8px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+        .bay-footer { text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px; pointer-events: none; }
+        .bay-v-worker { font-size: 12px; font-weight: 900; color: #fbbf24; }
+        
+        /* 차량 카드 (모바일 터치 영역 확장) */
+        .car-card { cursor: pointer; background: #334155; padding: 12px; border-radius: 14px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 6px rgba(0,0,0,0.3); touch-action: none; position: relative; z-index: 10; }
+        .car-card:active { transform: scale(0.97); background: #475569; }
+        
+        .tab-btn { transition: all 0.2s; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; font-weight: 900; }
+        .tab-content { display: none; width: 100%; height: calc(100vh - 56px); }
         .tab-content.active { display: flex; flex-direction: column; }
-        .input-group label { display: block; font-size: 11px; font-weight: 900; color: #94a3b8; margin-bottom: 2px; }
-        .input-group input, .input-group textarea, .input-group select { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 8px; color: #fff; outline: none; font-size: 13px; }
-        .history-item { position: relative; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 10px; padding: 8px; margin-bottom: 6px; font-size: 10px; }
+        
+        .input-group label { display: block; font-size: 11px; font-weight: 900; color: #94a3b8; margin-bottom: 3px; text-transform: uppercase; }
+        .input-group input, .input-group textarea, .input-group select { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px; color: #fff; outline: none; font-size: 14px; transition: all 0.2s; }
+        .input-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+        
+        .history-item { position: relative; background: rgba(15, 23, 42, 0.6); border-left: 4px solid #3b82f6; border-radius: 8px; padding: 10px; margin-bottom: 8px; font-size: 11px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .delete-history-btn { position: absolute; top: 8px; right: 8px; color: #ef4444; font-weight: bold; cursor: pointer; padding: 2px 6px; }
-        .db-checkbox { width: 20px; height: 20px; accent-color: #3b82f6; cursor: pointer; }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        
+        .db-checkbox { width: 22px; height: 22px; accent-color: #3b82f6; cursor: pointer; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        
+        /* FullCalendar 모바일 최적화 */
+        .fc { background: #1e293b; color: #fff; border-radius: 20px; border: none !important; padding: 10px; }
+        .fc td, .fc th { border: 1px solid rgba(255,255,255,0.05) !important; }
+        .fc-toolbar-title { font-size: 1.1rem !important; font-weight: 900; color: #3b82f6; }
+        .fc-button { background: #334155 !important; border: none !important; font-weight: bold !important; text-transform: uppercase !important; font-size: 0.7rem !important; }
+        .fc-daygrid-day-number { font-weight: 900; font-size: 12px; padding: 5px !important; }
     </style>
 </head>
 <body class="h-screen flex flex-col">
 
-    <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9000] flex items-center justify-center p-6 text-center text-white">
+    <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9000] flex items-center justify-center p-6 text-center">
         <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5">
-            <h1 class="text-3xl text-blue-500 mb-6 font-black italic">LK MOTORS V8.1</h1>
-            <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center outline-none border border-transparent focus:border-blue-500 text-white font-bold">
-            <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold uppercase shadow-lg">Enter System</button>
+            <h1 class="text-4xl text-blue-500 mb-8 font-black italic tracking-tighter uppercase">LK Motors V8.1</h1>
+            <input type="password" id="pw" placeholder="SYSTEM PASSWORD" class="w-full bg-slate-800 rounded-2xl py-5 px-6 mb-6 text-center text-white font-bold outline-none border-2 border-transparent focus:border-blue-500 transition-all">
+            <button onclick="login()" class="w-full py-5 bg-blue-600 rounded-2xl font-black text-white uppercase shadow-xl hover:bg-blue-500 active:scale-95 transition-all">Start Session</button>
         </div>
     </div>
 
-    <div id="upload-modal" class="fixed inset-0 bg-black/90 z-[9999] hidden flex-col items-center justify-center p-6 text-center text-white">
+    <div id="upload-modal" class="fixed inset-0 bg-black/95 z-[9999] hidden flex-col items-center justify-center p-6 text-white text-center">
         <div class="bg-slate-900 p-8 rounded-[40px] shadow-2xl w-full max-w-lg border border-blue-500/30">
             <h2 class="text-2xl text-blue-500 mb-4 font-black italic">장부 데이터 분석기</h2>
-            <input type="file" id="csv-file" accept=".csv" class="mb-6 text-xs text-slate-500 block w-full border border-dashed border-slate-700 p-4 rounded-xl">
-            <div id="upload-status" class="text-sm text-amber-500 mb-4 font-bold h-6">CSV 파일을 선택하세요.</div>
-            <div class="flex gap-2">
-                <button onclick="closeModal('upload-modal')" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">취소</button>
-                <button onclick="processCSV()" class="flex-1 py-4 bg-blue-600 rounded-2xl font-bold text-white uppercase">이관 시작</button>
+            <p class="text-[10px] text-slate-500 mb-6 uppercase font-bold tracking-widest">Master Database Migration Tool</p>
+            <input type="file" id="csv-file" accept=".csv" class="mb-6 text-xs text-slate-400 block w-full border-2 border-dashed border-slate-700 p-8 rounded-3xl hover:border-blue-500 transition-all">
+            <div id="upload-status" class="text-sm text-amber-500 mb-6 font-black h-6 uppercase">System Ready</div>
+            <div class="flex gap-4">
+                <button onclick="closeModal('upload-modal')" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold hover:bg-slate-700 transition-all">CANCEL</button>
+                <button onclick="processCSV()" class="flex-1 py-4 bg-blue-600 rounded-2xl font-black uppercase shadow-lg hover:bg-blue-500 transition-all">Import Now</button>
             </div>
         </div>
     </div>
 
-    <nav class="h-14 bg-slate-900 border-b border-white/5 flex items-center px-4 justify-between shrink-0">
-        <div class="flex gap-4 h-full">
-            <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black text-xs uppercase">현황판</button>
-            <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black text-xs uppercase">예약/리스트</button>
-            <button onclick="showTab('customer')" id="btn-customer" class="tab-btn font-black text-xs uppercase text-amber-500">고객/DB관리</button>
+    <nav class="h-14 bg-slate-900 border-b border-white/5 flex items-center px-4 justify-between shrink-0 shadow-2xl">
+        <div class="flex gap-6 h-full">
+            <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black text-xs uppercase tracking-tighter">Status Board</button>
+            <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black text-xs uppercase tracking-tighter">Calendar & List</button>
+            <button onclick="showTab('customer')" id="btn-customer" class="tab-btn font-black text-xs uppercase tracking-tighter text-amber-500">Master DB</button>
         </div>
-        <div class="flex gap-2">
-            <button onclick="document.getElementById('upload-modal').style.display='flex'" class="bg-slate-800 px-3 py-1.5 rounded-lg font-black text-[10px] text-blue-400 border border-blue-500/30">DB가져오기</button>
-            <button onclick="openEditModal(null)" class="bg-blue-600 px-3 py-1.5 rounded-lg font-black text-[10px] text-white">신규등록</button>
+        <div class="flex gap-3">
+            <button onclick="document.getElementById('upload-modal').style.display='flex'" class="bg-slate-800 px-4 py-2 rounded-xl font-black text-[10px] text-blue-400 border border-blue-500/30 hover:bg-slate-700">IMPORT</button>
+            <button onclick="openEditModal(null)" class="bg-blue-600 px-4 py-2 rounded-xl font-black text-[10px] text-white shadow-lg hover:bg-blue-500">NEW REG</button>
         </div>
     </nav>
 
     <main id="tab-status" class="tab-content active p-2 gap-2 overflow-y-auto custom-scroll">
         <section class="grid grid-cols-5 gap-2 shrink-0" id="bay-grid"></section>
-        <section class="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-2 pb-10">
-            <div class="bg-card rounded-2xl p-3 border-t-2 border-blue-500"><h3 class="text-blue-400 font-black text-[9px] mb-2 uppercase italic italic">Wait Today</h3><div id="today-zone" class="flex-1 dr-zone" data-bay="0"></div></div>
-            <div class="bg-card rounded-2xl p-3 border-t-2 border-indigo-500"><h3 class="text-indigo-400 font-black text-[9px] mb-2 uppercase italic italic">Tomorrow</h3><div id="tomorrow-zone" class="flex-1 dr-zone" data-bay="0-t"></div></div>
-            <div class="bg-card rounded-2xl p-3 border-t-2 border-amber-500"><h3 class="text-amber-500 font-black text-[9px] mb-2 uppercase italic italic">Others (7 Days)</h3><div id="other-zone" class="flex-1 dr-zone" data-bay="0-o"></div></div>
-            <div class="bg-card rounded-2xl p-3 border-t-2 border-emerald-500"><h3 class="text-emerald-400 font-black text-[9px] mb-2 uppercase italic italic">Done</h3><div id="done-zone" class="flex-1 dr-zone" data-bay="99"></div></div>
+        <section class="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-2 pb-14">
+            <div class="bg-card rounded-[32px] p-4 border-t-4 border-blue-500 shadow-2xl flex flex-col">
+                <h3 class="text-blue-400 font-black text-[10px] mb-3 uppercase italic tracking-widest flex justify-between"><span>Wait Today</span><span id="count-today" class="opacity-50">0</span></h3>
+                <div id="today-zone" class="flex-1 dr-zone" data-bay="0"></div>
+            </div>
+            <div class="bg-card rounded-[32px] p-4 border-t-4 border-indigo-500 shadow-2xl flex flex-col">
+                <h3 class="text-indigo-400 font-black text-[10px] mb-3 uppercase italic tracking-widest flex justify-between"><span>Tomorrow</span><span id="count-tomorrow" class="opacity-50">0</span></h3>
+                <div id="tomorrow-zone" class="flex-1 dr-zone" data-bay="0-t"></div>
+            </div>
+            <div class="bg-card rounded-[32px] p-4 border-t-4 border-amber-500 shadow-2xl flex flex-col">
+                <h3 class="text-amber-500 font-black text-[10px] mb-3 uppercase italic tracking-widest flex justify-between"><span>Upcoming</span><span id="count-other" class="opacity-50">0</span></h3>
+                <div id="other-zone" class="flex-1 dr-zone" data-bay="0-o"></div>
+            </div>
+            <div class="bg-card rounded-[32px] p-4 border-t-4 border-emerald-500 shadow-2xl flex flex-col">
+                <h3 class="text-emerald-400 font-black text-[10px] mb-3 uppercase italic tracking-widest flex justify-between"><span>Done</span><span id="count-done" class="opacity-50">0</span></h3>
+                <div id="done-zone" class="flex-1 dr-zone" data-bay="99"></div>
+            </div>
         </section>
     </main>
 
-    <main id="tab-res" class="tab-content p-2 gap-2">
-        <div class="flex gap-2 shrink-0">
-            <button onclick="toggleResMode('cal')" id="btn-m-cal" class="bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold uppercase shadow-lg">Calendar</button>
-            <button onclick="toggleResMode('list')" id="btn-m-list" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold uppercase">Detail List</button>
+    <main id="tab-res" class="tab-content p-2 gap-2 overflow-hidden">
+        <div class="flex-1 bg-slate-900 rounded-[32px] p-4 border border-white/5 overflow-hidden shadow-inner">
+            <div id='calendar' class="h-full"></div>
         </div>
-        <div id="cal-view" class="flex-1 bg-slate-900 rounded-2xl p-2 border border-white/5 overflow-hidden"><div id='calendar' class="h-full text-[9px]"></div></div>
-        <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-2xl p-2 overflow-y-auto border border-white/5 shadow-2xl custom-scroll">
-            <table class="w-full text-left font-bold text-slate-300 text-[10px] list-table">
-                <thead class="text-slate-500 border-b border-white/5 uppercase">
-                    <tr><th class="py-2 px-1">일시</th><th>번호</th><th>모델</th><th>이름/연락처</th><th>내용</th></tr>
+        <div id="list-view" class="h-1/3 bg-slate-900 rounded-[32px] p-5 overflow-y-auto border border-white/5 custom-scroll shadow-2xl">
+            <table class="w-full text-left font-bold text-slate-300 text-[11px]">
+                <thead class="text-slate-500 border-b border-white/10 uppercase sticky top-0 bg-slate-900 z-20">
+                    <tr><th class="py-4 px-2">Date/Time</th><th>Vehicle No</th><th>Customer Info</th><th class="hidden md:table-cell">Model</th><th>Job Desc</th></tr>
                 </thead>
                 <tbody id="list-body"></tbody>
             </table>
         </div>
     </main>
 
-    <main id="tab-customer" class="tab-content p-4 gap-4 bg-slate-950">
-        <div class="flex flex-col md:flex-row gap-2 items-center justify-between">
-            <input type="text" id="cust-search" oninput="syncCustomerDB(this.value)" placeholder="차량번호(끝4자리)/성함 검색..." class="flex-1 bg-slate-800 p-3 rounded-xl outline-none border border-white/5 focus:border-amber-500 text-sm font-bold text-white w-full">
-            <div class="flex gap-2 shrink-0">
-                <button onclick="toggleSelectAllCustomers()" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold border border-white/10 uppercase">Select All</button>
-                <button onclick="deleteSelectedCustomers()" class="bg-red-600 px-4 py-2 rounded-xl text-xs font-black shadow-lg uppercase">Bulk Delete</button>
+    <main id="tab-customer" class="tab-content p-6 gap-6 bg-slate-950">
+        <div class="flex flex-col md:flex-row gap-4 items-center">
+            <input type="text" id="cust-search" oninput="syncCustomerDB(this.value)" placeholder="차량 뒷4자리 또는 차주 성함 검색..." class="flex-1 bg-slate-800 p-5 rounded-2xl outline-none text-white font-bold border-2 border-transparent focus:border-amber-500 shadow-xl transition-all">
+            <div class="flex gap-3 shrink-0 w-full md:w-auto">
+                <button onclick="toggleSelectAll()" class="flex-1 bg-slate-700 py-4 px-6 rounded-2xl font-black text-xs uppercase hover:bg-slate-600 transition-all">Select All</button>
+                <button onclick="deleteSelectedCustomers()" class="flex-1 bg-red-600 py-4 px-6 rounded-2xl font-black text-xs shadow-lg uppercase hover:bg-red-500 transition-all">Bulk Delete</button>
             </div>
         </div>
-        <div class="flex-1 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 overflow-y-auto custom-scroll" id="customer-grid"></div>
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-y-auto custom-scroll pr-2" id="customer-grid"></div>
     </main>
 
-    <div id="edit-modal" class="fixed inset-0 bg-black/95 z-[9900] hidden items-center justify-center p-2 backdrop-blur-md text-white text-xs overflow-y-auto custom-scroll">
-        <div class="bg-slate-900 w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden relative shadow-2xl p-6">
-            <button onclick="closeModal('edit-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white font-light">&times;</button>
+    <div id="edit-modal" class="fixed inset-0 bg-black/95 z-[9900] hidden items-center justify-center p-4 backdrop-blur-2xl text-white">
+        <div class="bg-slate-900 w-full max-w-3xl rounded-[48px] p-10 border border-white/10 relative overflow-y-auto max-h-[95vh] custom-scroll shadow-2xl">
+            <button onclick="closeModal('edit-modal')" class="absolute top-8 right-10 text-5xl font-light text-slate-500 hover:text-white transition-all">&times;</button>
             <input type="hidden" id="m-id">
-            <div class="grid grid-cols-2 gap-4 mt-4">
-                <div class="space-y-2">
-                    <div class="input-group"><label>차량 번호</label><input type="text" id="m-car" oninput="fetchInfo(this.value, 'm')" class="uppercase font-black text-blue-400" placeholder="숫자 4자리"></div>
-                    <div class="input-group"><label>고객명/연락처</label><div class="flex gap-1"><input type="text" id="m-name" class="w-1/2" placeholder="이름"><input type="text" id="m-phone" class="w-1/2" placeholder="연락처"></div></div>
-                    <div class="input-group"><label>차대번호 (VIN)</label><input type="text" id="m-vin"></div>
-                    <div class="input-group"><label>차량등록일자</label><input type="date" id="m-first-date"></div>
-                    <p class="text-[10px] text-blue-400 font-bold mt-2 uppercase italic border-b border-white/5 pb-1">History</p>
-                    <div id="m-history-list" class="history-box custom-scroll h-28 overflow-y-auto"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mt-8">
+                <div class="space-y-6">
+                    <div class="input-group"><label>Vehicle Number</label><input type="text" id="m-car" oninput="fetchInfo(this.value, 'm')" class="uppercase font-black text-blue-400 text-2xl" placeholder="4 DIGITS ONLY"></div>
+                    <div class="input-group"><label>Owner / Phone</label><div class="flex gap-3"><input type="text" id="m-name" class="w-1/2" placeholder="NAME"><input type="text" id="m-phone" class="w-1/2" placeholder="PHONE"></div></div>
+                    <div class="input-group"><label>Chassis (VIN)</label><input type="text" id="m-vin" class="font-mono text-xs uppercase" placeholder="17 CHARACTERS"></div>
+                    <div class="input-group"><label>First Registration</label><input type="date" id="m-first-date"></div>
+                    <p class="text-[10px] text-blue-500 font-black uppercase italic border-b border-white/5 pb-2">Service History</p>
+                    <div id="m-history-list" class="h-32 overflow-y-auto custom-scroll pr-2 space-y-2"></div>
                 </div>
-                <div class="space-y-2">
-                    <div class="input-group"><label>담당 정비사</label><input type="text" id="m-mechanic"></div>
-                    <div class="grid grid-cols-2 gap-2"><div class="input-group"><label>예약일</label><input type="date" id="m-date"></div><div class="input-group"><label>시간</label><select id="m-time"></select></div></div>
-                    <div class="input-group"><label>모델</label><input type="text" id="m-model"></div>
-                    <div class="input-group"><label>정비 상세 내용</label><textarea id="m-desc" class="h-24 custom-scroll"></textarea></div>
+                <div class="space-y-6">
+                    <div class="input-group"><label>Main Mechanic</label><input type="text" id="m-mechanic" class="font-black text-amber-500" placeholder="NAME"></div>
+                    <div class="grid grid-cols-2 gap-4"><div><label>Service Date</label><input type="date" id="m-date"></div><div><label>Time Slot</label><select id="m-time"></select></div></div>
+                    <div class="input-group"><label>Car Model</label><input type="text" id="m-model" placeholder="MODEL NAME"></div>
+                    <div class="input-group"><label>Job Details</label><textarea id="m-desc" class="h-32 custom-scroll" placeholder="ENTER MAINTENANCE DETAILS..."></textarea></div>
                 </div>
             </div>
-            <div class="flex gap-2 mt-6">
-                <button onclick="deleteRecord('repairs', 'm-id')" class="flex-1 py-3 bg-red-600/80 text-white rounded-xl font-bold uppercase">Delete</button>
-                <button onclick="saveData()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-black uppercase">Save Info</button>
-                <button onclick="releaseVehicle()" id="rel-btn" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black uppercase">Release</button>
+            <div class="flex gap-4 mt-12">
+                <button onclick="deleteRecord('repairs', 'm-id')" class="flex-1 py-5 bg-red-600/20 text-red-500 border border-red-500/30 rounded-3xl font-black uppercase hover:bg-red-600/40 transition-all">Delete Record</button>
+                <button onclick="saveData()" class="flex-[2] py-5 bg-blue-600 rounded-3xl font-black text-white uppercase shadow-2xl hover:bg-blue-500 active:scale-95 transition-all">Save Changes</button>
+                <button onclick="releaseVehicle()" id="rel-btn" class="flex-1 py-5 bg-emerald-600 rounded-3xl font-black text-white uppercase shadow-2xl hover:bg-emerald-500 active:scale-95 transition-all">Release Car</button>
             </div>
         </div>
     </div>
 
-    <div id="c-modal" class="fixed inset-0 bg-black/95 z-[9950] hidden items-center justify-center p-2 text-white text-xs overflow-y-auto custom-scroll">
-        <div class="bg-slate-900 w-full max-w-lg rounded-3xl p-6 border border-amber-500/20 shadow-2xl relative">
-            <button onclick="closeModal('c-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white font-light">&times;</button>
-            <h2 class="text-lg font-black italic text-amber-500 mb-4 uppercase">Customer Master Database</h2>
+    <div id="c-modal" class="fixed inset-0 bg-black/95 z-[9950] hidden items-center justify-center p-4 text-white">
+        <div class="bg-slate-900 w-full max-w-lg rounded-[40px] p-10 border border-amber-500/20 shadow-2xl relative">
+            <button onclick="closeModal('c-modal')" class="absolute top-8 right-10 text-4xl font-light text-slate-500 hover:text-white">&times;</button>
+            <h2 class="text-xl font-black italic text-amber-500 mb-6 uppercase tracking-tight">Customer Master Database</h2>
             <input type="hidden" id="c-id">
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="input-group"><label>차량 번호</label><input type="text" id="c-car" oninput="fetchInfo(this.value, 'c')" class="font-black text-amber-400 uppercase"></div>
-                <div class="input-group"><label>차량 모델</label><input type="text" id="c-model"></div>
-                <div class="input-group"><label>성함</label><input type="text" id="c-name"></div>
-                <div class="input-group"><label>연락처</label><input type="text" id="c-phone"></div>
-                <div class="input-group col-span-2"><label>차대번호 (VIN)</label><input type="text" id="c-vin"></div>
-                <div class="input-group col-span-2"><label>최초 등록일</label><input type="date" id="c-first-date"></div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="input-group"><label>Vehicle No</label><input type="text" id="c-car" oninput="fetchInfo(this.value, 'c')" class="font-black text-amber-400 uppercase"></div>
+                <div class="input-group"><label>Car Model</label><input type="text" id="c-model"></div>
+                <div class="input-group"><label>Owner Name</label><input type="text" id="c-name"></div>
+                <div class="input-group"><label>Phone Number</label><input type="text" id="c-phone"></div>
+                <div class="input-group col-span-2"><label>VIN (Chassis)</label><input type="text" id="c-vin" class="font-mono"></div>
+                <div class="input-group col-span-2"><label>Registration Date</label><input type="date" id="c-first-date"></div>
             </div>
-            <p class="text-[10px] text-amber-500 font-bold mb-2 border-b border-white/10 pb-1 uppercase italic">Service History</p>
-            <div id="c-history-list" class="max-h-32 overflow-y-auto custom-scroll space-y-1 mb-6"></div>
-            <div class="flex gap-2">
-                <button onclick="deleteRecord('customers', 'c-id')" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold uppercase">Delete All</button>
-                <button onclick="saveCustomer()" class="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-black uppercase">Update & Close</button>
+            <p class="text-[10px] text-amber-600 font-black mb-3 border-b border-white/10 pb-2 uppercase italic">Full Service Logs</p>
+            <div id="c-history-list" class="max-h-40 overflow-y-auto custom-scroll space-y-2 mb-8 pr-2"></div>
+            <div class="flex gap-4">
+                <button onclick="deleteRecord('customers', 'c-id')" class="flex-1 py-4 bg-red-600/10 text-red-500 border border-red-500/20 rounded-2xl font-bold uppercase">Purge All</button>
+                <button onclick="saveCustomer()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black uppercase shadow-lg">Update Master</button>
             </div>
         </div>
     </div>
 
     <script>
+        // 파이어베이스 원본 키값 100% 유지
         const firebaseConfig = {
             apiKey: "AIzaSyDhTPGNKNm38PSBdATs9lks0lYu52QrP3A",
             authDomain: "lkmotors-246f1.firebaseapp.com",
@@ -170,7 +201,7 @@
         const db = firebase.database();
         let calendar;
 
-        // [접속 엔진]
+        // [엔진 1] 로그인 & 초기화
         function login() {
             if(document.getElementById('pw').value === "9999") {
                 document.getElementById('login-layer').style.display = 'none';
@@ -179,7 +210,7 @@
                 initCalendar();
                 initDraggable();
                 startSync();
-            } else { alert("PASSWORD ERROR"); }
+            } else { alert("ACCESS DENIED"); }
         }
 
         function initTimeSelect() {
@@ -194,66 +225,77 @@
         function initBays() {
             const grid = document.getElementById('bay-grid'); grid.innerHTML = "";
             for(let i=1; i<=5; i++) {
-                grid.innerHTML += `<div class="bay-item" id="bay-wrap-${i}"><div class="text-[8px] font-black text-slate-500 uppercase flex justify-between px-1"><span>BAY ${i}</span><span id="bay-status-${i}">Stand-by</span></div><div id="bay-zone-${i}" class="dr-zone flex-1 flex flex-col pt-1" data-bay="${i}"></div></div>`;
+                grid.innerHTML += `<div class="bay-item"><div class="text-[9px] font-black text-slate-500 uppercase flex justify-between px-1"><span>BAY ${i}</span><span id="bay-status-${i}">Ready</span></div><div id="bay-zone-${i}" class="dr-zone flex-1 flex flex-col pt-1" data-bay="${i}"></div></div>`;
             }
         }
 
-        // [데이터 동기화 엔진]
+        // [엔진 2] 데이터 실시간 동기화 + 최신 날짜순 정렬
         function startSync() {
             db.ref('repairs').on('value', (s) => {
                 const data = s.val() || {};
                 document.querySelectorAll('.dr-zone').forEach(z => z.innerHTML = ""); 
-                document.getElementById('list-body').innerHTML = "";
+                const listBody = document.getElementById('list-body'); listBody.innerHTML = "";
+                
                 const now = new Date(); now.setHours(0,0,0,0);
                 const todayStr = now.toISOString().split('T')[0];
                 const tomStr = new Date(now.getTime() + 86400000).toISOString().split('T')[0];
-                const weekLimit = new Date(now.getTime() + (86400000 * 7));
 
-                const events = [];
-                for(let id in data) {
-                    const car = data[id];
-                    events.push({ id, title: car.carNo, start: car.date, backgroundColor: car.bay==="99"?'#059669':'#2563eb' });
-                    
-                    // [모바일 터치 강화] car-card 레이아웃 유지하며 터치 이벤트 부여
-                    const carHtml = `<div class="car-card shadow-lg active:scale-95 transition-transform" onclick="openEditModal('${id}')">
-                        <div class="flex justify-between items-start">
-                            <span class="text-blue-400 font-black text-[11px] block">${car.carNo}</span>
-                            <span class="text-[8px] text-slate-400 font-bold">${car.model || ''}</span>
-                        </div>
-                    </div>`;
-                    
-                    // 상세 리스트 채우기
-                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5 hover:bg-slate-800" onclick="openEditModal('${id}')">
-                        <td class="py-2 px-1"><span>${car.date}</span><br><span class="opacity-50 text-[7px]">${car.r_time||''}</span></td>
-                        <td class="text-blue-400 font-bold">${car.carNo}</td><td>${car.model||'-'}</td>
-                        <td>${car.name}<br><span class="text-[8px] text-amber-500">${car.phone||'-'}</span></td>
-                        <td class="truncate max-w-[100px] opacity-60">${car.desc||'-'}</td>
-                    </tr>`;
+                // [정렬] 상세 리스트 날짜 기준 최신순 정렬
+                const sortedRepairs = Object.entries(data).sort((a, b) => new Date(b[1].date) - new Date(a[1].date));
 
-                    // 구역별 배치
+                sortedRepairs.forEach(([id, car]) => {
+                    // [모바일 클릭 이슈 해결] 드래그와 클릭 충돌 방지를 위해 pointer-events 및 터치 이벤트 최적화
+                    const carCardHtml = `
+                        <div class="car-card active:scale-95 transition-all" onclick="openEditModal('${id}')">
+                            <div class="flex justify-between items-start">
+                                <span class="text-blue-400 font-black text-[13px] block">${car.carNo}</span>
+                                <span class="text-[8px] text-slate-400 font-bold">${car.model || ''}</span>
+                            </div>
+                        </div>`;
+                    
+                    listBody.innerHTML += `
+                        <tr class="border-b border-white/5 hover:bg-slate-800 transition-colors" onclick="openEditModal('${id}')">
+                            <td class="py-5 px-2"><span>${car.date}</span><br><span class="opacity-30 text-[8px]">${car.r_time||''}</span></td>
+                            <td class="text-blue-400 font-black text-[13px]">${car.carNo}</td>
+                            <td><span class="text-white">${car.name}</span><br><span class="text-amber-500 text-[9px] font-bold">${car.phone||'-'}</span></td>
+                            <td class="hidden md:table-cell text-slate-400 text-[10px]">${car.model||'-'}</td>
+                            <td class="text-[9px] opacity-60 leading-tight max-w-[150px] truncate">${car.desc||'-'}</td>
+                        </tr>`;
+
                     if(car.bay == "0") {
-                        const resDate = new Date(car.date);
-                        if(car.date === todayStr) document.getElementById('today-zone').innerHTML += carHtml;
-                        else if(car.date === tomStr) document.getElementById('tomorrow-zone').innerHTML += carHtml;
-                        else if(resDate <= weekLimit) document.getElementById('other-zone').innerHTML += carHtml;
+                        if(car.date === todayStr) document.getElementById('today-zone').innerHTML += carCardHtml;
+                        else if(car.date === tomStr) document.getElementById('tomorrow-zone').innerHTML += carCardHtml;
+                        else document.getElementById('other-zone').innerHTML += carCardHtml;
                     } else if(car.bay == "99") {
-                        document.getElementById('done-zone').innerHTML += carHtml;
+                        document.getElementById('done-zone').innerHTML += carCardHtml;
                     } else {
                         const target = document.getElementById(`bay-zone-${car.bay}`);
-                        if(target) target.innerHTML = `<div class="flex-1 flex flex-col justify-between h-full" onclick="openEditModal('${id}')">
-                            <div class="bay-header"><p class="bay-v-no">${car.carNo}</p><p class="bay-v-model">${car.model || ''}</p><p class="bay-v-desc">${car.desc || ''}</p></div>
-                            <div class="bay-footer"><p class="bay-v-worker">${car.mechanic || '미지정'}</p></div>
-                        </div>`;
+                        if(target) target.innerHTML = `
+                            <div class="flex-1 flex flex-col justify-between h-full pointer-events-auto" onclick="openEditModal('${id}')">
+                                <div class="bay-header"><p class="bay-v-no">${car.carNo}</p><p class="bay-v-model">${car.model || ''}</p><p class="bay-v-desc">${car.desc || ''}</p></div>
+                                <div class="bay-footer"><p class="bay-v-worker">${car.mechanic || 'Wait'}</p></div>
+                            </div>`;
                     }
+                });
+                
+                // 캘린더 데이터 갱신
+                if(calendar) {
+                    calendar.removeAllEvents();
+                    calendar.addEventSource(sortedRepairs.map(x => ({
+                        id: x[0], title: x[1].carNo, start: x[1].date, 
+                        backgroundColor: x[1].bay==='99'?'#059669':'#3b82f6',
+                        borderColor: 'transparent'
+                    })));
                 }
-                if(calendar) { calendar.removeAllEvents(); calendar.addEventSource(events); }
+                updateCounts();
             });
         }
 
-        // [수정 사항 1 & 3: 4자리 조회 및 이전 정보 자동 삭제]
+        // [수정 사항 1 & 3] 4자리 조회 엔진 & 이전 정보 즉시 초기화
         function fetchInfo(searchValue, prefix) {
             const search = searchValue.toUpperCase();
-            // 숫자 2자리 이하는 보안 및 혼선 방지를 위해 조회 차단 + 입력칸 싹 비우기
+            
+            // 2자리 이하이거나 숫자가 지워지면 무조건 화면 리셋 (다른 숫자 입력 시에도 작동)
             if (searchValue.length < 3) {
                 clearFields(prefix);
                 return;
@@ -263,7 +305,7 @@
                 let found = false;
                 s.forEach(child => {
                     const d = child.val();
-                    // 조건: 차량번호 끝 4자리가 일치하거나, 성함에 검색어가 포함될 때 (이름 검색 지원)
+                    // 뒷 4자리 일치하거나 성함이 포함될 때 (번호 검색은 4자리 이상일 때만 발동)
                     const isCarMatch = (search.length >= 4 && d.carNo && d.carNo.endsWith(search));
                     const isNameMatch = (isNaN(search) && d.name && d.name.includes(search));
 
@@ -275,24 +317,36 @@
                         document.getElementById(prefix + '-first-date').value = d.firstDate || "";
                         if (prefix === 'm') loadHistoryIntoModal(d.carNo);
                         found = true;
-                        return true; // 루프 종료
+                        return true; // 매칭 시 종료
                     }
                 });
-                // 정보가 없거나 틀린 숫자가 들어가면 이전 정보 싹 지움
+                // 검색 결과가 없으면 즉시 초기화 (정보 섞임 방지)
                 if (!found) clearFields(prefix);
             });
         }
 
         function clearFields(prefix) {
-            document.getElementById(prefix + '-name').value = "";
-            document.getElementById(prefix + '-phone').value = "";
-            document.getElementById(prefix + '-model').value = "";
-            document.getElementById(prefix + '-vin').value = "";
-            document.getElementById(prefix + '-first-date').value = "";
-            if (prefix === 'm') document.getElementById('m-history-list').innerHTML = "";
+            ['name','phone','model','vin','first-date'].forEach(id => {
+                const el = document.getElementById(prefix + '-' + id);
+                if(el) el.value = "";
+            });
+            if(prefix === 'm') document.getElementById('m-history-list').innerHTML = "";
         }
 
-        // [수정 사항 2: DB 이관 매칭 - 연락처 5번째, 등록일 14번째]
+        // [원본 백업 로직 1] 히스토리 로드
+        function loadHistoryIntoModal(carNo) {
+            db.ref('customers').orderByChild('carNo').equalTo(carNo).once('value', s => {
+                const hList = document.getElementById('m-history-list'); hList.innerHTML = "";
+                if(s.exists()){
+                    const d = Object.values(s.val())[0];
+                    if(d.history) Object.values(d.history).reverse().forEach(h => {
+                        hList.innerHTML += `<div class="history-item"><b>[${h.date}]</b> ${h.desc} <span class="opacity-30 text-[8px]">${h.mechanic||''}</span></div>`;
+                    });
+                }
+            });
+        }
+
+        // [수정 사항 2] DB 이관 매칭 (연락처 5번, 등록일 14번 고정)
         async function processCSV() {
             const fileInput = document.getElementById('csv-file');
             const status = document.getElementById('upload-status');
@@ -322,13 +376,13 @@
                         }
                     }
                 }
-                status.innerText = `이관 완료: ${count}건`;
+                status.innerText = `Migration Success: ${count}`;
                 setTimeout(() => { closeModal('upload-modal'); syncCustomerDB(""); }, 2000);
             };
             reader.readAsText(fileInput.files[0], 'EUC-KR');
         }
 
-        // [나머지 V8.1 원본 필수 로직들]
+        // [원본 백업 로직 2] 마스터 DB 검색 및 삭제
         function syncCustomerDB(key) {
             db.ref('customers').once('value', s => {
                 const grid = document.getElementById('customer-grid'); grid.innerHTML = "";
@@ -336,16 +390,84 @@
                 s.forEach(c => {
                     const d = c.val();
                     if(d.carNo.includes(search) || (d.name && d.name.includes(key))) {
-                        grid.innerHTML += `<div class="bg-card p-4 rounded-2xl border border-white/5 relative active:scale-95 transition-all">
-                            <input type="checkbox" value="${c.key}" class="cust-chk db-checkbox absolute top-3 right-3">
-                            <div onclick="openCustomerModal('${c.key}')">
-                                <p class="text-amber-500 font-black text-sm uppercase">${d.carNo}</p>
-                                <p class="text-[10px] text-white font-bold">${d.name} | ${d.model||'-'}</p>
-                            </div>
-                        </div>`;
+                        grid.innerHTML += `
+                            <div class="bg-card p-6 rounded-[32px] border border-white/5 relative active:scale-95 transition-all shadow-xl" onclick="openCustomerModal('${c.key}')">
+                                <input type="checkbox" value="${c.key}" onclick="event.stopPropagation()" class="cust-chk db-checkbox absolute top-5 right-5">
+                                <p class="text-amber-500 font-black text-xl uppercase">${d.carNo}</p>
+                                <p class="text-xs text-white font-bold opacity-80">${d.name} | ${d.model||'-'}</p>
+                                <p class="text-[9px] text-slate-500 mt-2 font-mono">${d.vin||'NO VIN'}</p>
+                            </div>`;
                     }
                 });
             });
+        }
+
+        // [원본 백업 로직 3] 기타 정밀 필수 기능 (V8.1 오리지널)
+        function saveData() { 
+            const id = document.getElementById('m-id').value;
+            const data = { carNo: document.getElementById('m-car').value.toUpperCase(), name: document.getElementById('m-name').value, phone: document.getElementById('m-phone').value, mechanic: document.getElementById('m-mechanic').value, date: document.getElementById('m-date').value, r_time: document.getElementById('m-time').value, model: document.getElementById('m-model').value, desc: document.getElementById('m-desc').value, vin: document.getElementById('m-vin').value.toUpperCase(), firstDate: document.getElementById('m-first-date').value };
+            if(!data.carNo) return alert("Vehicle No Required");
+            if(id) db.ref('repairs/'+id).update(data).then(() => closeModal('edit-modal'));
+            else { data.bay = "0"; db.ref('repairs').push(data).then(() => closeModal('edit-modal')); }
+        }
+
+        function releaseVehicle() { 
+            const id = document.getElementById('m-id').value; 
+            db.ref('repairs/'+id).once('value', s => { 
+                const d = s.val(); 
+                db.ref('customers').orderByChild('carNo').equalTo(d.carNo).once('value', cs => { 
+                    if(cs.exists()) db.ref('customers/'+Object.keys(cs.val())[0]+'/history').push({ date: d.date, desc: d.desc, mechanic: d.mechanic }); 
+                }); 
+                db.ref('repairs/'+id).remove().then(() => { alert("Vehicle Released"); closeModal('edit-modal'); }); 
+            }); 
+        }
+
+        function initCalendar() { 
+            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { 
+                initialView:'dayGridMonth', locale:'ko', height:'100%', 
+                headerToolbar:{left:'prev,next today', center:'title', right:''},
+                eventClick:(info)=>openEditModal(info.event.id),
+                dayMaxEvents: true
+            }); calendar.render(); 
+        }
+
+        function initDraggable() { 
+            document.querySelectorAll('.dr-zone').forEach(el => { 
+                new Sortable(el, { 
+                    group: 'vehicles', animation: 300, delay: 150, delayOnTouchOnly: true,
+                    onEnd: (evt) => { 
+                        const idTag = evt.item.getAttribute('onclick'); if(!idTag) return;
+                        const id = idTag.match(/'([^']+)'/)[1];
+                        let bayVal = evt.to.getAttribute('data-bay');
+                        db.ref('repairs/' + id).update({ bay: bayVal.includes('-') ? "0" : bayVal }); 
+                    }
+                }); 
+            }); 
+        }
+
+        function showTab(id) { 
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-'+id).classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-'+id).classList.add('active');
+            if(id==='res') setTimeout(()=>calendar.updateSize(), 200);
+            if(id==='customer') syncCustomerDB("");
+        }
+
+        function openEditModal(id) { 
+            document.getElementById('m-id').value = id || ""; 
+            if(id) { 
+                db.ref('repairs/'+id).once('value', s => { 
+                    const d = s.val(); 
+                    document.getElementById('m-car').value = d.carNo; document.getElementById('m-name').value = d.name;
+                    document.getElementById('m-phone').value = d.phone; document.getElementById('m-mechanic').value = d.mechanic||"";
+                    document.getElementById('m-date').value = d.date; document.getElementById('m-time').value = d.r_time;
+                    document.getElementById('m-model').value = d.model; document.getElementById('m-desc').value = d.desc;
+                    document.getElementById('m-vin').value = d.vin; document.getElementById('m-first-date').value = d.firstDate||"";
+                    loadHistoryIntoModal(d.carNo);
+                }); 
+            } else { document.querySelectorAll('#edit-modal input, #edit-modal textarea').forEach(i => i.value = ""); }
+            document.getElementById('edit-modal').style.display='flex'; 
         }
 
         function openCustomerModal(id) {
@@ -356,78 +478,36 @@
                 document.getElementById('c-vin').value = d.vin || ""; document.getElementById('c-first-date').value = d.firstDate || "";
                 const hList = document.getElementById('c-history-list'); hList.innerHTML = "";
                 if(d.history) Object.keys(d.history).reverse().forEach(hk => {
-                    hList.innerHTML += `<div class="history-item text-[9px]">${d.history[hk].date} | ${d.history[hk].desc}</div>`;
+                    hList.innerHTML += `<div class="history-item"><b>${d.history[hk].date}</b> | ${d.history[hk].desc}</div>`;
                 });
                 document.getElementById('c-modal').style.display = 'flex';
             });
         }
 
-        function saveData() { 
-            const id = document.getElementById('m-id').value;
-            const data = { carNo: document.getElementById('m-car').value.toUpperCase(), name: document.getElementById('m-name').value, phone: document.getElementById('m-phone').value, mechanic: document.getElementById('m-mechanic').value, date: document.getElementById('m-date').value, r_time: document.getElementById('m-time').value, model: document.getElementById('m-model').value, desc: document.getElementById('m-desc').value, vin: document.getElementById('m-vin').value.toUpperCase(), firstDate: document.getElementById('m-first-date').value };
-            if(id) db.ref('repairs/'+id).update(data).then(() => closeModal('edit-modal'));
-            else { data.bay = "0"; db.ref('repairs').push(data).then(() => closeModal('edit-modal')); }
+        function saveCustomer() {
+            const id = document.getElementById('c-id').value;
+            const data = { carNo:document.getElementById('c-car').value.toUpperCase(), name:document.getElementById('c-name').value, model:document.getElementById('c-model').value, phone:document.getElementById('c-phone').value, vin:document.getElementById('c-vin').value.toUpperCase(), firstDate:document.getElementById('c-first-date').value };
+            db.ref('customers/'+id).update(data).then(() => { alert("Master Updated"); syncCustomerDB(""); closeModal('c-modal'); });
         }
 
-        function releaseVehicle() { 
-            const id = document.getElementById('m-id').value; 
-            db.ref('repairs/'+id).once('value', s => { 
-                const d = s.val(); 
-                db.ref('customers').orderByChild('carNo').equalTo(d.carNo).once('value', cs => { 
-                    if(cs.exists()) db.ref('customers/'+Object.keys(cs.val())[0]+'/history').push({ date: d.date, desc: d.desc }); 
-                }); 
-                db.ref('repairs/'+id).remove().then(() => closeModal('edit-modal')); 
-            }); 
+        function deleteRecord(path, idField) { 
+            const id = document.getElementById(idField).value; 
+            if(id && confirm("Erase permanently?")) db.ref(path+'/'+id).remove().then(() => closeModal(idField==='m-id'?'edit-modal':'c-modal')); 
         }
 
-        function openEditModal(id) { 
-            document.getElementById('m-id').value = id || ""; 
-            if(id) { 
-                db.ref('repairs/'+id).once('value', s => { 
-                    const d = s.val(); 
-                    document.getElementById('m-car').value = d.carNo; 
-                    document.getElementById('m-name').value = d.name; 
-                    document.getElementById('m-phone').value = d.phone; 
-                    document.getElementById('m-mechanic').value = d.mechanic||""; 
-                    document.getElementById('m-date').value = d.date; 
-                    document.getElementById('m-time').value = d.r_time; 
-                    document.getElementById('m-model').value = d.model; 
-                    document.getElementById('m-desc').value = d.desc; 
-                    document.getElementById('m-vin').value = d.vin; 
-                    document.getElementById('m-first-date').value = d.firstDate||""; 
-                    loadHistoryIntoModal(d.carNo);
-                }); 
-            } else { 
-                document.querySelectorAll('#edit-modal input, #edit-modal textarea').forEach(i => i.value = ""); 
-            } 
-            document.getElementById('edit-modal').style.display='flex'; 
+        function deleteSelectedCustomers() {
+            const sel = Array.from(document.querySelectorAll('.cust-chk:checked')).map(cb => cb.value);
+            if(sel.length && confirm("Bulk Delete?")) { sel.forEach(id => db.ref('customers/'+id).remove()); syncCustomerDB(""); }
         }
 
-        function loadHistoryIntoModal(carNo) { 
-            db.ref('customers').orderByChild('carNo').equalTo(carNo).once('value', s => { 
-                const hList = document.getElementById('m-history-list'); hList.innerHTML = ""; 
-                if(s.exists()){ 
-                    const d = Object.values(s.val())[0]; 
-                    if(d.history) Object.values(d.history).reverse().forEach(h => { 
-                        hList.innerHTML += `<div class='history-item'><b>[${h.date}]</b> ${h.desc}</div>`; 
-                    }); 
-                } 
-            }); 
-        }
-
-        function deleteRecord(path, idField) { const id = document.getElementById(idField).value; if(id && confirm("삭제?")) db.ref(path+'/'+id).remove().then(() => closeModal('edit-modal')); }
-        function initCalendar() { calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView:'dayGridMonth', locale:'ko', height:'100%', eventClick: (info) => openEditModal(info.event.id) }); calendar.render(); }
-        function toggleResMode(m) { document.getElementById('cal-view').style.display = (m==='cal'?'block':'none'); document.getElementById('list-view').style.display = (m==='list'?'block':'none'); if(m==='cal') calendar.updateSize(); }
-        function showTab(id) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.getElementById('tab-'+id).classList.add('active'); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-'+id).classList.add('active'); if(id==='customer') syncCustomerDB(""); }
+        let selectAll = false;
+        function toggleSelectAll() { selectAll = !selectAll; document.querySelectorAll('.cust-chk').forEach(cb => cb.checked = selectAll); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function initDraggable() { document.querySelectorAll('.dr-zone').forEach(el => { new Sortable(el, { group: 'vehicles', animation: 200, onEnd: (evt) => { const idTag = evt.item.getAttribute('onclick'); if(!idTag) return; const id = idTag.match(/'([^']+)'/)[1]; db.ref('repairs/' + id).update({ bay: evt.to.getAttribute('data-bay').includes('-') ? "0" : evt.to.getAttribute('data-bay') }); }}); }); }
-        
-        function toggleSelectAllCustomers() { document.querySelectorAll('.cust-chk').forEach(cb => cb.checked = !cb.checked); }
-        async function deleteSelectedCustomers() {
-            const selected = Array.from(document.querySelectorAll('.cust-chk:checked')).map(cb => cb.value);
-            if (!selected.length || !confirm("일괄 삭제하시겠습니까?")) return;
-            for (const id of selected) { await db.ref('customers/' + id).remove(); }
-            syncCustomerDB("");
+        function updateCounts() {
+            document.getElementById('count-today').innerText = document.getElementById('today-zone').childElementCount;
+            document.getElementById('count-tomorrow').innerText = document.getElementById('tomorrow-zone').childElementCount;
+            document.getElementById('count-other').innerText = document.getElementById('other-zone').childElementCount;
+            document.getElementById('count-done').innerText = document.getElementById('done-zone').childElementCount;
         }
     </script>
 </body>
