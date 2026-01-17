@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - V7.3 MASTER</title>
+    <title>LK MOTORS - V7.4 MASTER</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,40 +15,32 @@
         body { font-family: 'Noto Sans KR', sans-serif; background: #0f172a; color: #f1f5f9; overflow: hidden; -webkit-tap-highlight-color: transparent; }
         .bg-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
         .dr-zone { min-height: 80px; border: 1px dashed #334155; border-radius: 12px; padding: 5px; }
-        
-        /* [V4.9 정통 베이 스타일 유지] */
         .bay-item { display: flex; flex-direction: column; justify-content: space-between; padding: 10px !important; min-height: 220px !important; border-radius: 20px !important; background: #1e293b !important; border: 1px solid #334155 !important; }
-        .bay-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; pointer-events: none; }
-        .bay-v-no { font-size: 16px; font-weight: 900; color: #3b82f6; line-height: 1.2; }
-        .bay-v-model { font-size: 10px; color: #94a3b8; font-weight: 700; margin-top: 2px; }
-        .bay-v-desc { font-size: 9px; color: #cbd5e1; margin-top: 5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .bay-footer { text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; pointer-events: none; }
-        .bay-v-worker { font-size: 11px; font-weight: 900; color: #fbbf24; }
-        
+        .bay-v-no { font-size: 16px; font-weight: 900; color: #3b82f6; text-align: center; }
+        .bay-v-worker { font-size: 11px; font-weight: 900; color: #fbbf24; text-align: center; }
         .car-card { cursor: pointer; background: #334155; padding: 10px; border-radius: 12px; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.1); touch-action: auto; position: relative; z-index: 100; }
         .tab-btn.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; }
         .tab-content { display: none; width: 100%; height: 100%; }
         .tab-content.active { display: flex; flex-direction: column; }
         .input-group label { display: block; font-size: 11px; font-weight: 900; color: #94a3b8; margin-bottom: 2px; }
         .input-group input, .input-group textarea, .input-group select { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 8px; color: #fff; outline: none; font-size: 13px; }
-        .history-box { background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 12px; padding: 10px; max-height: 120px; overflow-y: auto; font-size: 10px; }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .history-item { position: relative; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 10px; padding: 8px; margin-bottom: 6px; font-size: 10px; }
+        .delete-history-btn { position: absolute; top: 8px; right: 8px; color: #ef4444; font-weight: bold; cursor: pointer; padding: 2px 6px; }
     </style>
 </head>
 <body class="h-screen flex flex-col">
 
     <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9000] flex items-center justify-center p-6 text-center text-white">
         <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5">
-            <h1 class="text-3xl text-blue-500 mb-6 font-black italic uppercase">LK MOTORS V7.3</h1>
+            <h1 class="text-3xl text-blue-500 mb-6 font-black italic uppercase">LK MOTORS V7.4</h1>
             <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center outline-none border border-transparent focus:border-blue-500 text-white font-bold">
             <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold uppercase">System Enter</button>
         </div>
     </div>
 
-    <div id="upload-modal" class="fixed inset-0 bg-black/90 z-[9999] hidden flex-col items-center justify-center p-6 text-center">
+    <div id="upload-modal" class="fixed inset-0 bg-black/90 z-[9999] hidden flex-col items-center justify-center p-6 text-center text-white">
         <div class="bg-slate-900 p-8 rounded-[40px] shadow-2xl w-full max-w-lg border border-blue-500/30">
-            <h2 class="text-2xl text-blue-500 mb-4 font-black italic">장부 데이터 분석기 (V7.3)</h2>
+            <h2 class="text-2xl text-blue-500 mb-4 font-black italic">장부 데이터 분석기 (V7.4)</h2>
             <input type="file" id="csv-file" accept=".csv" class="mb-6 text-xs text-slate-500 block w-full border border-dashed border-slate-700 p-4 rounded-xl">
             <div id="upload-status" class="text-sm text-amber-500 mb-4 font-bold h-6">CSV 파일을 선택하세요.</div>
             <div class="flex gap-2">
@@ -86,10 +78,10 @@
             <button onclick="toggleResMode('list')" id="btn-m-list" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold">리스트</button>
         </div>
         <div id="cal-view" class="flex-1 bg-slate-900 rounded-2xl p-2 border border-white/5 overflow-hidden"><div id='calendar' class="h-full text-[9px]"></div></div>
-        <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-2xl p-2 overflow-y-auto border border-white/5 shadow-2xl">
-            <table class="w-full text-left font-bold text-slate-300 text-[9px] list-table">
+        <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-2xl p-2 overflow-y-auto border border-white/5 shadow-2xl text-[9px]">
+            <table class="w-full text-left font-bold text-slate-300">
                 <thead class="text-slate-500 border-b border-white/5 uppercase">
-                    <tr><th class="py-2 px-1">일시</th><th>번호</th><th>모델</th><th>차대번호</th><th>연락처</th><th>내용</th></tr>
+                    <tr><th class="py-2 px-1">일시</th><th>번호</th><th>모델</th><th>이름/연락처</th></tr>
                 </thead>
                 <tbody id="list-body"></tbody>
             </table>
@@ -97,44 +89,16 @@
     </main>
 
     <main id="tab-customer" class="tab-content p-4 gap-4 bg-slate-950">
-        <input type="text" oninput="syncCustomerDB(this.value)" placeholder="차량번호/이름/연락처 검색..." class="w-full bg-slate-800 p-3 rounded-xl outline-none border border-white/5 focus:border-amber-500 text-sm font-bold">
+        <input type="text" oninput="syncCustomerDB(this.value)" placeholder="차량번호/이름/연락처 검색..." class="w-full bg-slate-800 p-3 rounded-xl outline-none border border-white/5 focus:border-amber-500 text-sm font-bold text-white">
         <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 overflow-y-auto" id="customer-grid"></div>
     </main>
 
-    <div id="edit-modal" class="fixed inset-0 bg-black/95 z-[9900] hidden items-center justify-center p-2 backdrop-blur-md">
-        <div class="bg-slate-900 w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden relative shadow-2xl p-6 text-xs text-white">
-            <button onclick="closeModal('edit-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white font-light">&times;</button>
-            <input type="hidden" id="m-id">
-            <div class="grid grid-cols-2 gap-4 mt-4">
-                <div class="space-y-2">
-                    <div class="input-group"><label>차량 번호</label><input type="text" id="m-car" oninput="fetchInfo(this.value, 'm')" class="uppercase font-black text-blue-400"></div>
-                    <div class="input-group"><label>고객명</label><input type="text" id="m-name"></div>
-                    <div class="input-group"><label>연락처</label><input type="text" id="m-phone"></div>
-                    <div class="input-group"><label>차대번호 (VIN)</label><input type="text" id="m-vin"></div>
-                    <div class="input-group"><label class="text-blue-400 font-bold">이전 정비 이력</label><div id="m-history-list" class="history-box custom-scroll"></div></div>
-                </div>
-                <div class="space-y-2">
-                    <div class="input-group"><label>담당 정비사</label><input type="text" id="m-mechanic"></div>
-                    <div class="grid grid-cols-2 gap-2"><div class="input-group"><label>예약일</label><input type="date" id="m-date"></div><div class="input-group"><label>시간</label><select id="m-time"></select></div></div>
-                    <div class="input-group"><label>모델/km</label><div class="flex gap-1"><input type="text" id="m-model" class="w-2/3"><input type="number" id="m-km" class="w-1/3"></div></div>
-                    <div class="input-group"><label>최초 등록일</label><input type="date" id="m-first-date"></div>
-                    <div class="input-group"><label>정비 상세 내용</label><textarea id="m-desc" class="h-20"></textarea></div>
-                </div>
-            </div>
-            <div class="flex gap-2 mt-6">
-                <button onclick="deleteRecord('repairs', 'm-id')" class="flex-1 py-3 bg-red-600/80 text-white rounded-xl font-bold uppercase">Delete</button>
-                <button onclick="saveData()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-black uppercase">Save</button>
-                <button onclick="releaseVehicle()" id="rel-btn" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black uppercase">Release</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="c-modal" class="fixed inset-0 bg-black/95 z-[9950] hidden items-center justify-center p-2 text-white text-xs">
+    <div id="c-modal" class="fixed inset-0 bg-black/95 z-[9950] hidden items-center justify-center p-2 text-white text-xs overflow-y-auto">
         <div class="bg-slate-900 w-full max-w-lg rounded-3xl p-6 border border-amber-500/20 shadow-2xl relative">
             <button onclick="closeModal('c-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white font-light">&times;</button>
-            <h2 class="text-lg font-black italic text-amber-500 mb-4 uppercase">Customer Database Manager</h2>
+            <h2 class="text-lg font-black italic text-amber-500 mb-4 uppercase">Customer Master Database</h2>
             <input type="hidden" id="c-id">
-            <div class="grid grid-cols-2 gap-3 mb-3">
+            <div class="grid grid-cols-2 gap-3 mb-4">
                 <div class="input-group"><label>차량 번호</label><input type="text" id="c-car" class="font-black text-amber-400 uppercase"></div>
                 <div class="input-group"><label>차량 모델</label><input type="text" id="c-model"></div>
                 <div class="input-group"><label>성함</label><input type="text" id="c-name"></div>
@@ -142,13 +106,46 @@
                 <div class="input-group col-span-2"><label>차대번호 (VIN)</label><input type="text" id="c-vin"></div>
                 <div class="input-group col-span-2"><label>최초 등록일</label><input type="date" id="c-first-date"></div>
             </div>
-            <div class="bg-slate-800 p-3 rounded-xl border border-white/5 mb-4">
-                <p class="text-[10px] text-amber-500 font-bold mb-1 italic">과거 정비 히스토리</p>
-                <div id="c-history-list" class="max-h-32 overflow-y-auto custom-scroll space-y-1"></div>
-            </div>
+            
+            <p class="text-[10px] text-amber-500 font-bold mb-2 italic border-b border-white/10 pb-1">정비 히스토리 (X 클릭 시 개별삭제)</p>
+            <div id="c-history-list" class="max-h-48 overflow-y-auto custom-scroll pr-1 mb-6"></div>
+            
             <div class="flex gap-2">
-                <button onclick="deleteRecord('customers', 'c-id')" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold uppercase text-xs">고객 정보 삭제</button>
-                <button onclick="saveCustomer()" class="flex-[2] py-3 bg-amber-600 text-white rounded-xl font-black text-xs">수정 사항 저장</button>
+                <button onclick="deleteRecord('customers', 'c-id')" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold uppercase text-xs">전체 정보 삭제</button>
+                <button onclick="saveCustomer()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-black text-xs uppercase">수정 내용 저장</button>
+                <button onclick="closeModal('c-modal')" class="flex-1 py-3 bg-slate-700 text-white rounded-xl font-bold text-xs uppercase">닫기/취소</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="fixed inset-0 bg-black/95 z-[9900] hidden items-center justify-center p-2 backdrop-blur-md text-white text-xs overflow-y-auto">
+        <div class="bg-slate-900 w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden relative shadow-2xl p-6">
+            <button onclick="closeModal('edit-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white font-light">&times;</button>
+            <input type="hidden" id="m-id">
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="space-y-2">
+                    <div class="input-group"><label>차량 번호</label><input type="text" id="m-car" oninput="fetchInfo(this.value, 'm')" class="uppercase font-black text-blue-400"></div>
+                    <div class="input-group"><label>고객명/연락처</label><div class="flex gap-1"><input type="text" id="m-name" class="w-1/2"><input type="text" id="m-phone" class="w-1/2"></div></div>
+                    <div class="input-group"><label>차대번호</label><input type="text" id="m-vin"></div>
+                    <div class="input-group"><label class="text-blue-400 font-bold">이전 정비 이력 (날짜별 내역)</label>
+                        <div id="m-history-list" class="history-box custom-scroll h-32"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="input-group"><label>담당 정비사</label><input type="text" id="m-mechanic"></div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="input-group"><label>예약일</label><input type="date" id="m-date"></div>
+                        <div class="input-group"><label>시간</label><select id="m-time"></select></div>
+                    </div>
+                    <div class="input-group"><label>모델/km</label><div class="flex gap-1"><input type="text" id="m-model" class="w-2/3"><input type="number" id="m-km" class="w-1/3"></div></div>
+                    <div class="input-group"><label>최초 등록일</label><input type="date" id="m-first-date"></div>
+                    <div class="input-group"><label>정비 상세 내용</label><textarea id="m-desc" class="h-20"></textarea></div>
+                </div>
+            </div>
+            <div class="flex gap-2 mt-6">
+                <button onclick="deleteRecord('repairs', 'm-id')" class="flex-1 py-3 bg-red-600/80 text-white rounded-xl font-bold">데이터 삭제</button>
+                <button onclick="saveData()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-black">정보 저장</button>
+                <button onclick="releaseVehicle()" id="rel-btn" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black">차량 출고</button>
             </div>
         </div>
     </div>
@@ -191,7 +188,6 @@
             }
         }
 
-        // [최적화] 실시간 분류 로직
         function startSync() {
             db.ref('repairs').on('value', (s) => {
                 const data = s.val();
@@ -209,7 +205,7 @@
                     events.push({ id, title: `${car.carNo} [${car.desc || ''}]`, start: car.date, backgroundColor: car.bay==="99"?'#059669':'#2563eb', borderColor: 'transparent' });
                     const carHtml = `<div class="car-card shadow-lg" onclick="openEditModal('${id}')"><div class="flex justify-between items-start"><span class="text-blue-400 font-black text-[11px] block">${car.carNo}</span><span class="text-[8px] text-slate-400">${car.model || ''}</span></div><div class="text-[8px] text-slate-500 mt-1 truncate pointer-events-none">${car.desc || ''}</div></div>`;
 
-                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5 hover:bg-slate-800" onclick="openEditModal('${id}')"><td class="py-2"><span>${car.date}</span><br><span class="opacity-50 text-[7px]">${car.r_time||''}</span></td><td class="text-blue-400">${car.carNo}</td><td>${car.model||'-'}</td><td class="opacity-40 italic">${car.vin||'-'}</td><td class="text-amber-500">${car.phone||'-'}</td><td class="truncate max-w-[100px]">${car.desc||'-'}</td></tr>`;
+                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5 hover:bg-slate-800" onclick="openEditModal('${id}')"><td class="py-2 px-1"><span>${car.date}</span></td><td class="text-blue-400">${car.carNo}</td><td>${car.model||'-'}</td><td>${car.name}</td></tr>`;
 
                     if(car.bay == "0") {
                         const resDate = new Date(car.date);
@@ -229,7 +225,15 @@
             });
         }
 
-        // [정밀 이관] 장부 데이터 파싱 엔진
+        // [V7.4 정비 이력 개별 삭제 로직]
+        function deleteHistoryItem(customerId, historyKey) {
+            if(confirm("이 정비 이력 한 건을 영구 삭제하시겠습니까?")) {
+                db.ref('customers/' + customerId + '/history/' + historyKey).remove().then(() => {
+                    openCustomerModal(customerId); // 새로고침
+                });
+            }
+        }
+
         async function processCSV() {
             const fileInput = document.getElementById('csv-file');
             const status = document.getElementById('upload-status');
@@ -250,8 +254,8 @@
                                 if(nextMatch) vin = nextMatch[0];
                             }
                             await db.ref('customers').orderByChild('carNo').equalTo(carNo).once('value', s => {
-                                const phone = cols[3] && cols[3].includes('010') ? cols[3].trim() : "";
-                                const data = { carNo, name: cols[3].trim(), model: cols[4].trim(), phone: phone, vin: vin, firstDate: cols[0].trim() };
+                                const name = cols[3].trim();
+                                const data = { carNo, name, model: cols[4].trim(), vin: vin, firstDate: cols[0].trim() };
                                 const hItem = { date: cols[0].trim(), desc: cols[8].trim() + " (₩" + (cols[13]||0) + ")" };
                                 if(s.exists()){ db.ref('customers/'+Object.keys(s.val())[0]+'/history').push(hItem); }
                                 else { db.ref('customers').push({...data, history: [hItem]}); }
@@ -266,42 +270,29 @@
             reader.readAsText(fileInput.files[0], 'EUC-KR');
         }
 
-        // [데이터 수정/저장/삭제]
         function saveData() {
             const id = document.getElementById('m-id').value;
             const data = { carNo: document.getElementById('m-car').value.toUpperCase(), name: document.getElementById('m-name').value, phone: document.getElementById('m-phone').value, mechanic: document.getElementById('m-mechanic').value, date: document.getElementById('m-date').value, r_time: document.getElementById('m-time').value, model: document.getElementById('m-model').value, km: document.getElementById('m-km').value, desc: document.getElementById('m-desc').value, vin: document.getElementById('m-vin').value.toUpperCase(), firstDate: document.getElementById('m-first-date').value };
             if(!data.carNo) return alert("번호 필수");
-            
             db.ref('customers').orderByChild('carNo').equalTo(data.carNo).once('value', s => {
                 const cData = { carNo: data.carNo, name: data.name, phone: data.phone, model: data.model, firstDate: data.firstDate, vin: data.vin };
                 if(!s.exists()) db.ref('customers').push(cData);
                 else db.ref('customers/'+Object.keys(s.val())[0]).update(cData);
             });
-
             if(id) db.ref('repairs/'+id).update(data).then(() => closeModal('edit-modal'));
             else { data.bay = "0"; db.ref('repairs').push(data).then(() => closeModal('edit-modal')); }
         }
 
         function saveCustomer() {
             const id = document.getElementById('c-id').value;
-            const data = { 
-                carNo: document.getElementById('c-car').value.toUpperCase(), 
-                name: document.getElementById('c-name').value,
-                model: document.getElementById('c-model').value,
-                phone: document.getElementById('c-phone').value,
-                vin: document.getElementById('c-vin').value.toUpperCase(),
-                firstDate: document.getElementById('c-first-date').value
-            };
+            const data = { carNo: document.getElementById('c-car').value.toUpperCase(), name: document.getElementById('c-name').value, model: document.getElementById('c-model').value, phone: document.getElementById('c-phone').value, vin: document.getElementById('c-vin').value.toUpperCase(), firstDate: document.getElementById('c-first-date').value };
             db.ref('customers/'+id).update(data).then(() => { alert("DB 수정 완료"); closeModal('c-modal'); });
         }
 
         function deleteRecord(path, idField) {
             const id = document.getElementById(idField).value;
             if(id && confirm("정말로 삭제하시겠습니까? 데이터는 복구되지 않습니다.")) {
-                db.ref(path+'/'+id).remove().then(() => {
-                    alert("삭제되었습니다.");
-                    closeModal(idField==='m-id'?'edit-modal':'c-modal');
-                });
+                db.ref(path+'/'+id).remove().then(() => { alert("삭제되었습니다."); closeModal(idField==='m-id'?'edit-modal':'c-modal'); });
             }
         }
 
@@ -344,7 +335,12 @@
                 document.getElementById('c-model').value = d.model || ""; document.getElementById('c-first-date').value = d.firstDate || "";
                 document.getElementById('c-phone').value = d.phone || ""; document.getElementById('c-vin').value = d.vin || "";
                 const hList = document.getElementById('c-history-list'); hList.innerHTML = "";
-                if(d.history) Object.values(d.history).reverse().forEach(h => { hList.innerHTML += `<div class="bg-slate-900/50 p-2 rounded-lg border border-white/5 text-[9px] mb-1"><b>[${h.date}]</b> ${h.desc}</div>`; });
+                if(d.history) {
+                    Object.keys(d.history).reverse().forEach(hKey => {
+                        const h = d.history[hKey];
+                        hList.innerHTML += `<div class="history-item">📅 ${h.date} | ${h.desc} <span class="delete-history-btn" onclick="deleteHistoryItem('${id}', '${hKey}')">X</span></div>`;
+                    });
+                } else hList.innerHTML = "<p class='text-slate-500 italic'>이력이 없습니다.</p>";
             });
             document.getElementById('c-modal').style.display = 'flex';
         }
