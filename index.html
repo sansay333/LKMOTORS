@@ -346,5 +346,36 @@
             reader.readAsText(fileInput.files[0], 'EUC-KR');
         }
     </script>
+<script>
+function filterTable() {
+    // 1. 입력창과 테이블을 가져옵니다. 
+    // 사장님 시스템의 ID값이 'searchInput'과 'customerTable'인지 확인필요!
+    var input = document.getElementById("searchInput");
+    if(!input) return; // 입력창이 없으면 중단
+    
+    var filter = input.value.toLowerCase();
+    var table = document.getElementById("customerTable");
+    var tr = table.getElementsByTagName("tr");
+
+    // 2. 루프를 돌며 검색어 포함 여부를 확인합니다.
+    for (var i = 1; i < tr.length; i++) {
+        var tdCarNo = tr[i].getElementsByTagName("td")[2]; // 3번째 칸: 차량번호
+        var tdName = tr[i].getElementsByTagName("td")[3];  // 4번째 칸: 성함
+        
+        if (tdCarNo && tdName) {
+            var carNoText = tdCarNo.textContent || tdCarNo.innerText;
+            var nameText = tdName.textContent || tdName.innerText;
+            
+            // 이름에 포함되거나 차량번호에 포함되면 표시 (숫자 4자리 검색 가능)
+            if (nameText.toLowerCase().indexOf(filter) > -1 || 
+                carNoText.toLowerCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+}
+</script>    
 </body>
 </html>
