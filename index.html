@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - V6.1 MASTER</title>
+    <title>LK MOTORS - V6.2 MASTER</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,7 +16,7 @@
         .bg-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
         .dr-zone { min-height: 80px; border: 1px dashed #334155; border-radius: 12px; padding: 5px; }
         
-        /* [V4.9 디자인 계승: 베이 레이아웃] */
+        /* [V4.9 베이 레이아웃 고정] */
         .bay-item { display: flex; flex-direction: column; justify-content: space-between; padding: 10px !important; min-height: 220px !important; border-radius: 20px !important; background: #1e293b !important; border: 1px solid #334155 !important; }
         .bay-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; pointer-events: none; }
         .bay-v-no { font-size: 16px; font-weight: 900; color: #3b82f6; line-height: 1.2; }
@@ -49,16 +49,16 @@
 </head>
 <body class="h-screen flex flex-col">
 
-    <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9999] flex items-center justify-center p-6 text-center">
-        <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5 font-black uppercase text-white">
-            <h1 class="text-3xl text-blue-500 mb-6 italic">LK MOTORS V6.1</h1>
-            <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center outline-none border border-transparent focus:border-blue-500 font-bold">
+    <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9999] flex items-center justify-center p-6 text-center text-white">
+        <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5 font-black uppercase">
+            <h1 class="text-3xl text-blue-500 mb-6 italic">LK MOTORS V6.2</h1>
+            <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center outline-none border border-transparent focus:border-blue-500 text-white font-bold">
             <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold">시스템 접속</button>
         </div>
     </div>
 
     <nav class="h-14 bg-slate-900 border-b border-white/5 flex items-center px-4 justify-between shrink-0">
-        <div class="flex gap-4 h-full">
+        <div class="flex gap-4 h-full text-white">
             <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black text-xs">현황판</button>
             <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black text-xs">예약관리</button>
             <button onclick="showTab('customer')" id="btn-customer" class="tab-btn font-black text-xs text-amber-500">고객이력</button>
@@ -83,8 +83,8 @@
         </div>
         <div id="cal-view" class="flex-1 bg-slate-900 rounded-2xl p-2 border border-white/5 overflow-hidden"><div id='calendar' class="h-full"></div></div>
         <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-2xl p-4 overflow-y-auto border border-white/5 shadow-2xl">
-            <table class="w-full text-left font-bold text-slate-300 text-[10px]">
-                <thead class="text-slate-500 border-b border-white/5 uppercase text-[9px]">
+            <table class="w-full text-left font-bold text-slate-300 text-[10px] list-table">
+                <thead class="text-slate-500 border-b border-white/5 uppercase">
                     <tr><th class="py-2 px-1">일시</th><th>번호</th><th>모델</th><th>차대번호</th><th>성함/연락처</th></tr>
                 </thead>
                 <tbody id="list-body"></tbody>
@@ -104,9 +104,10 @@
             <div class="grid grid-cols-2 gap-4 mt-4">
                 <div class="space-y-2 text-xs">
                     <div class="input-group"><label>차량 번호</label><input type="text" id="m-car" oninput="fetchInfo(this.value, 'm')" class="uppercase font-black text-blue-400"></div>
-                    <div class="input-group"><label>고객명</label><input type="text" id="m-name"></div>
-                    <div class="input-group"><label>연락처</label><input type="text" id="m-phone"></div>
+                    <div class="input-group"><label>고객명/연락처</label><div class="flex gap-1"><input type="text" id="m-name" class="w-1/2"><input type="text" id="m-phone" class="w-1/2"></div></div>
                     <div class="input-group"><label>차대번호 (VIN)</label><input type="text" id="m-vin"></div>
+                    <div class="input-group"><label>부품 내역</label><textarea id="m-parts" class="h-14" placeholder="사용 부품명 입력"></textarea></div>
+                    <div class="input-group"><label>정비 공임 (₩)</label><input type="number" id="m-labor" placeholder="공임비 숫자만 입력"></div>
                     <div class="input-group"><label class="text-blue-400 font-bold">이전 정비 이력 (Auto-load)</label>
                         <div id="m-history-list" class="history-box custom-scroll space-y-1"></div>
                     </div>
@@ -119,7 +120,7 @@
                     </div>
                     <div class="input-group"><label>모델/km</label><div class="flex gap-1"><input type="text" id="m-model" class="w-2/3"><input type="number" id="m-km" class="w-1/3"></div></div>
                     <div class="input-group"><label>최초 등록일</label><input type="date" id="m-first-date"></div>
-                    <div class="input-group"><label>정비 요청 상세</label><textarea id="m-desc" class="h-20"></textarea></div>
+                    <div class="input-group"><label>정비 상세 내용</label><textarea id="m-desc" class="h-20"></textarea></div>
                 </div>
             </div>
             <div class="flex gap-2 mt-6">
@@ -141,16 +142,19 @@
                 <div class="input-group"><label>성함</label><input type="text" id="c-name"></div>
                 <div class="input-group"><label>최초 등록일</label><input type="date" id="c-first-date"></div>
             </div>
-            <div class="bg-slate-800 p-3 rounded-xl border border-white/5 mb-4 max-h-40 overflow-y-auto custom-scroll" id="c-history-list"></div>
+            <div class="bg-slate-800 p-3 rounded-xl border border-white/5 mb-4">
+                <p class="text-[10px] text-amber-500 font-bold mb-1 italic border-b border-white/5 pb-1">정비 및 비용 히스토리</p>
+                <div id="c-history-list" class="max-h-40 overflow-y-auto custom-scroll text-[10px]"></div>
+            </div>
             <div class="flex gap-2">
-                <button onclick="deleteRecord('customers', 'c-id')" class="flex-1 py-3 bg-red-900 text-white rounded-xl font-bold text-sm">고객 삭제</button>
-                <button onclick="saveCustomer()" class="flex-[2] py-3 bg-amber-600 text-white rounded-xl font-black shadow-lg text-sm">정보 업데이트</button>
+                <button onclick="deleteRecord('customers', 'c-id')" class="flex-1 py-3 bg-red-900 text-white rounded-xl font-bold">고객 삭제</button>
+                <button onclick="saveCustomer()" class="flex-[2] py-3 bg-amber-600 text-white rounded-xl font-black shadow-lg">정보 업데이트</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Firebase 설정 (사용자님 설정값)
+        // Firebase 설정 (사용자님 고유 설정)
         const firebaseConfig = {
             apiKey: "AIzaSyDhTPGNKNm38PSBdATs9lks0lYu52QrP3A",
             authDomain: "lkmotors-246f1.firebaseapp.com",
@@ -167,15 +171,11 @@
         function login() {
             if(document.getElementById('pw').value === "9999") {
                 document.getElementById('login-layer').style.display = 'none';
-                initTimeSelect();
-                initBays();
-                initCalendar();
-                initDraggable();
-                syncCustomerDB("");
-                startSync();
+                initTimeSelect(); initBays(); initCalendar(); initDraggable(); syncCustomerDB(""); startSync();
             } else { alert("PASS ERROR"); }
         }
 
+        // 10분 단위 선택기
         function initTimeSelect() {
             const select = document.getElementById('m-time');
             let opts = "";
@@ -207,16 +207,14 @@
                     
                     const carHtml = `<div class="car-card shadow-lg" onclick="openEditModal('${id}')"><div class="flex justify-between items-start"><span class="text-blue-400 font-black text-[11px] block">${car.carNo}</span><span class="text-[8px] text-slate-400">${car.model || ''}</span></div><div class="card-inner-desc truncate pointer-events-none">${car.desc || '내용 없음'}</div></div>`;
 
-                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5" onclick="openEditModal('${id}')"><td class="py-2 px-1"><span>${car.date}</span></td><td class="text-blue-400">${car.carNo}</td><td><span class="text-white text-[10px] font-bold">${car.name}</span><br><span class="text-amber-500 text-[8px]">${car.phone||'-'}</span></td><td class="opacity-40 truncate max-w-[80px] text-[10px]">${car.desc||'-'}</td></tr>`;
+                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5" onclick="openEditModal('${id}')"><td class="py-2 px-1"><span>${car.date}</span><br><span class="text-[8px] opacity-50">${car.r_time||''}</span></td><td class="text-blue-400 text-xs">${car.carNo}</td><td>${car.model||'-'}</td><td>${car.vin||'-'}</td><td><span class="text-white text-[10px]">${car.name}</span><br><span class="text-amber-500 text-[8px]">${car.phone||'-'}</span></td></tr>`;
 
-                    if(car.bay == "0") {
-                        document.getElementById('today-zone').innerHTML += carHtml;
-                    } else if(car.bay == "99") {
-                        document.getElementById('done-zone').innerHTML += carHtml;
-                    } else {
+                    if(car.bay == "0") document.getElementById('today-zone').innerHTML += carHtml;
+                    else if(car.bay == "99") document.getElementById('done-zone').innerHTML += carHtml;
+                    else {
                         const target = document.getElementById(`bay-zone-${car.bay}`);
                         if(target) {
-                            target.innerHTML = `<div class="flex-1 flex flex-col justify-between h-full" onclick="openEditModal('${id}')"><div class="bay-header"><p class="bay-v-no">${car.carNo}</p><p class="bay-v-model">${car.model || 'Unknown'}</p><p class="bay-v-desc">${car.desc || 'No Description'}</p></div><div class="bay-footer"><p class="bay-v-worker">${car.mechanic || ' 정비사 미지정'}</p></div></div>`;
+                            target.innerHTML = `<div class="flex-1 flex flex-col justify-between h-full" onclick="openEditModal('${id}')"><div class="bay-header"><p class="bay-v-no">${car.carNo}</p><p class="bay-v-model">${car.model || 'Unknown'}</p><p class="bay-v-desc">${car.desc || '내용 없음'}</p></div><div class="bay-footer"><p class="bay-v-worker">${car.mechanic || ' 정비사 미지정'}</p></div></div>`;
                             document.getElementById(`bay-status-${car.bay}`).innerText = "Active";
                             document.getElementById(`bay-status-${car.bay}`).className = "text-[7px] text-blue-500 font-black uppercase";
                         }
@@ -228,8 +226,8 @@
 
         function saveData() {
             const id = document.getElementById('m-id').value;
-            const data = { carNo: document.getElementById('m-car').value.toUpperCase(), name: document.getElementById('m-name').value, phone: document.getElementById('m-phone').value, mechanic: document.getElementById('m-mechanic').value, date: document.getElementById('m-date').value, r_time: document.getElementById('m-time').value, model: document.getElementById('m-model').value, km: document.getElementById('m-km').value, desc: document.getElementById('m-desc').value, vin: document.getElementById('m-vin').value.toUpperCase(), firstDate: document.getElementById('m-first-date').value };
-            if(!data.carNo) return alert("번호 필수");
+            const data = { carNo: document.getElementById('m-car').value.toUpperCase(), name: document.getElementById('m-name').value, phone: document.getElementById('m-phone').value, mechanic: document.getElementById('m-mechanic').value, date: document.getElementById('m-date').value, r_time: document.getElementById('m-time').value, model: document.getElementById('m-model').value, km: document.getElementById('m-km').value, desc: document.getElementById('m-desc').value, vin: document.getElementById('m-vin').value.toUpperCase(), firstDate: document.getElementById('m-first-date').value, parts: document.getElementById('m-parts').value, labor: document.getElementById('m-labor').value };
+            if(!data.carNo) return alert("차량번호 필수");
             db.ref('customers').orderByChild('carNo').equalTo(data.carNo).once('value', s => {
                 const cData = { carNo: data.carNo, name: data.name, phone: data.phone, model: data.model, firstDate: data.firstDate, vin: data.vin };
                 if(!s.exists()) db.ref('customers').push(cData);
@@ -237,6 +235,18 @@
             });
             if(id) db.ref('repairs/'+id).update(data).then(() => closeModal('edit-modal'));
             else { data.bay = "0"; db.ref('repairs').push(data).then(() => closeModal('edit-modal')); }
+        }
+
+        function releaseVehicle() {
+            const id = document.getElementById('m-id').value;
+            db.ref('repairs/'+id).once('value', s => {
+                const d = s.val();
+                const historyItem = { date: d.date, desc: d.desc, km: d.km, mechanic: d.mechanic, parts: d.parts || "-", labor: d.labor || 0, phone: d.phone, vin: d.vin };
+                db.ref('customers').orderByChild('carNo').equalTo(d.carNo).once('value', cs => {
+                    if(cs.exists()) db.ref('customers/'+Object.keys(cs.val())[0]+'/history').push(historyItem);
+                });
+                db.ref('repairs/'+id).remove().then(() => { alert("출고완료/이력저장"); closeModal('edit-modal'); });
+            });
         }
 
         function openEditModal(id) {
@@ -251,6 +261,8 @@
                     document.getElementById('m-model').value = d.model; document.getElementById('m-km').value = d.km;
                     document.getElementById('m-desc').value = d.desc; document.getElementById('m-vin').value = d.vin || "";
                     document.getElementById('m-first-date').value = d.firstDate || "";
+                    document.getElementById('m-parts').value = d.parts || "";
+                    document.getElementById('m-labor').value = d.labor || "";
                     loadHistoryIntoModal(d.carNo);
                 });
             } else document.querySelectorAll('#edit-modal input, #edit-modal textarea').forEach(i => i.value = "");
@@ -262,19 +274,8 @@
                 const hList = document.getElementById('m-history-list'); hList.innerHTML = "";
                 if(s.exists()){
                     const d = Object.values(s.val())[0];
-                    if(d.history) Object.values(d.history).reverse().forEach(h => { hList.innerHTML += `<div class='border-b border-white/5 py-1'><b>[${h.date}]</b> ${h.desc}</div>`; });
+                    if(d.history) Object.values(d.history).reverse().forEach(h => { hList.innerHTML += `<div class='border-b border-white/5 py-1'><b>[${h.date}]</b> ${h.desc} (₩${(h.labor||0).toLocaleString()})</div>`; });
                 }
-            });
-        }
-
-        function releaseVehicle() {
-            const id = document.getElementById('m-id').value;
-            db.ref('repairs/'+id).once('value', s => {
-                const d = s.val();
-                db.ref('customers').orderByChild('carNo').equalTo(d.carNo).once('value', cs => {
-                    if(cs.exists()) db.ref('customers/'+Object.keys(cs.val())[0]+'/history').push({ date: d.date, desc: d.desc, km: d.km, mechanic: d.mechanic });
-                });
-                db.ref('repairs/'+id).remove().then(() => { alert("출고완료/이력저장"); closeModal('edit-modal'); });
             });
         }
 
@@ -297,17 +298,15 @@
                 document.getElementById('c-car').value = d.carNo; document.getElementById('c-name').value = d.name;
                 document.getElementById('c-model').value = d.model || ""; document.getElementById('c-first-date').value = d.firstDate || "";
                 const hList = document.getElementById('c-history-list'); hList.innerHTML = "";
-                if(d.history) Object.values(d.history).reverse().forEach(h => { hList.innerHTML += `<div class="bg-slate-900/50 p-2 rounded-lg border border-white/5 text-[9px] mb-1"><b>[${h.date}]</b> ${h.desc} / ${h.mechanic||'-'}</div>`; });
+                if(d.history) Object.values(d.history).reverse().forEach(h => { 
+                    hList.innerHTML += `<div class="bg-slate-900/50 p-2 rounded-lg border border-white/5 text-[9px] mb-1"><b>[${h.date}]</b> ${h.desc}<br><span class="text-blue-300">🛠 부품: ${h.parts||'-'} / 💰 공임: ₩${(h.labor||0).toLocaleString()}</span><br><span class="text-slate-500">VIN: ${h.vin||'-'} / TEL: ${h.phone||'-'}</span></div>`; 
+                });
             });
             document.getElementById('c-modal').style.display = 'flex';
         }
 
-        function deleteRecord(path, idField) {
-            const id = document.getElementById(idField).value;
-            if(id && confirm("삭제하시겠습니까?")) db.ref(path+'/'+id).remove().then(() => closeModal(idField==='m-id'?'edit-modal':'c-modal'));
-        }
-
         function saveCustomer() { const id = document.getElementById('c-id').value; db.ref('customers/'+id).update({ carNo: document.getElementById('c-car').value.toUpperCase(), name: document.getElementById('c-name').value, model: document.getElementById('c-model').value, firstDate: document.getElementById('c-first-date').value }).then(() => { alert("업데이트됨"); closeModal('c-modal'); }); }
+        function deleteRecord(path, idField) { const id = document.getElementById(idField).value; if(id && confirm("정말로 삭제하시겠습니까?")) db.ref(path+'/'+id).remove().then(() => closeModal(idField==='m-id'?'edit-modal':'c-modal')); }
         function initCalendar() { calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView:'dayGridMonth', locale:'ko', height:'100%', headerToolbar:{left:'prev,next today', center:'title', right:''}, eventClick: (info) => openEditModal(info.event.id) }); calendar.render(); }
         function toggleResMode(m) { document.getElementById('cal-view').style.display = (m==='cal'?'block':'none'); document.getElementById('list-view').style.display = (m==='list'?'block':'none'); if(m==='cal') calendar.updateSize(); }
         function showTab(id) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.getElementById('tab-'+id).classList.add('active'); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-'+id).classList.add('active'); if(id==='res' && calendar) setTimeout(() => calendar.updateSize(), 200); }
