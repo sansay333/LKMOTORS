@@ -228,4 +228,91 @@
         initBays();
     </script>
 </body>
+<div id="login-screen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-6">
+    <div class="bg-slate-800 p-10 rounded-[40px] shadow-2xl border border-white/10 w-full max-w-sm text-center">
+        <h1 class="text-3xl font-black text-white italic mb-2">LK MOTORS</h1>
+        <p class="text-slate-500 text-xs mb-8 uppercase font-bold tracking-widest">Administrator Only</p>
+        <input type="password" id="admin-pw" placeholder="비밀번호 입력" class="w-full bg-slate-900 border-none rounded-2xl py-4 px-6 text-white mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
+        <button onclick="checkLogin()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-500/30">시스템 접속</button>
+    </div>
+</div>
+
+<button onclick="openReservationForm()" class="fixed bottom-10 right-10 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl z-40 flex items-center justify-center text-2xl hover:scale-110 transition-transform">
+    <i class="fas fa-plus"></i>
+</button>
+
+<div id="res-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-lg rounded-[40px] overflow-hidden">
+        <div class="p-8">
+            <h2 class="text-2xl font-black text-slate-800 mb-6">신규 정비 예약 등록</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">차량 번호</label>
+                    <input type="text" id="reg-carNo" placeholder="예: 12가 3456" class="w-full bg-slate-100 border-none rounded-2xl py-4 px-5 text-slate-800 outline-none mt-1">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">고객명</label>
+                        <input type="text" id="reg-owner" placeholder="홍길동" class="w-full bg-slate-100 border-none rounded-2xl py-4 px-5 text-slate-800 outline-none mt-1">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">배정 BAY (1~10)</label>
+                        <input type="number" id="reg-bay" placeholder="1" class="w-full bg-slate-100 border-none rounded-2xl py-4 px-5 text-slate-800 outline-none mt-1">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">정비 내용</label>
+                    <textarea id="reg-desc" placeholder="엔진오일 교환 및 브레이크 패드 점검" class="w-full bg-slate-100 border-none rounded-2xl py-4 px-5 text-slate-800 outline-none mt-1 h-24 resize-none"></textarea>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-8">
+                <button onclick="closeResForm()" class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold">취소</button>
+                <button onclick="saveReservation()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg">예약 확정 및 등록</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 로그인 체크 함수
+    function checkLogin() {
+        const pw = document.getElementById('admin-pw').value;
+        if(pw === "9999") { // 비밀번호 설정 (원하시는 번호로 수정 가능)
+            document.getElementById('login-screen').classList.add('hidden');
+        } else {
+            alert("관리자 비밀번호가 일치하지 않습니다.");
+        }
+    }
+
+    // 예약 모달 열기/닫기
+    function openReservationForm() { document.getElementById('res-modal').style.display = 'flex'; }
+    function closeResForm() { document.getElementById('res-modal').style.display = 'none'; }
+
+    // 데이터베이스 저장 함수
+    function saveReservation() {
+        const carNo = document.getElementById('reg-carNo').value;
+        const owner = document.getElementById('reg-owner').value;
+        const bay = document.getElementById('reg-bay').value;
+        const desc = document.getElementById('reg-desc').value;
+
+        if(!carNo || !owner) return alert("차량번호와 고객명은 필수입니다.");
+
+        db.ref('repairs').push({
+            carNo: carNo,
+            owner: owner,
+            bay: bay,
+            status: "입고확인",
+            step: 1,
+            percent: "25%",
+            desc: desc,
+            timestamp: Date.now()
+        }).then(() => {
+            alert("정비 예약이 등록되었습니다.");
+            closeResForm();
+            // 입력칸 초기화
+            document.getElementById('reg-carNo').value = "";
+            document.getElementById('reg-owner').value = "";
+        });
+    }
+</script>    
 </html>
