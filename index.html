@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - V6.1 MASTER</title>
+    <title>LK MOTORS - V6.2 MASTER (비용&부품 관리)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,7 +16,7 @@
         .bg-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
         .dr-zone { min-height: 80px; border: 1px dashed #334155; border-radius: 12px; padding: 5px; }
         
-        /* [V6.0 베이 레이아웃 유지] */
+        /* [V6.1 베이 레이아웃 고정] */
         .bay-item { display: flex; flex-direction: column; justify-content: space-between; padding: 10px !important; min-height: 220px !important; border-radius: 20px !important; background: #1e293b !important; border: 1px solid #334155 !important; }
         .bay-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; pointer-events: none; }
         .bay-v-no { font-size: 16px; font-weight: 900; color: #3b82f6; line-height: 1.2; }
@@ -35,7 +35,7 @@
         .input-group label { display: block; font-size: 11px; font-weight: 900; color: #94a3b8; margin-bottom: 2px; }
         .input-group input, .input-group textarea, .input-group select { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 8px; color: #fff; outline: none; font-size: 13px; }
         
-        .history-box { background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 12px; padding: 10px; max-height: 120px; overflow-y: auto; font-size: 10px; }
+        .history-box { background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 12px; padding: 10px; max-height: 100px; overflow-y: auto; font-size: 10px; }
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
@@ -50,7 +50,7 @@
 
     <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9999] flex items-center justify-center p-6 text-center">
         <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5 font-black uppercase">
-            <h1 class="text-3xl text-blue-500 mb-6 italic">LK MOTORS V6.1</h1>
+            <h1 class="text-3xl text-blue-500 mb-6 italic">LK MOTORS V6.2</h1>
             <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center text-white outline-none border border-transparent focus:border-blue-500">
             <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold">시스템 접속</button>
         </div>
@@ -84,7 +84,7 @@
         <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-2xl p-4 overflow-y-auto border border-white/5">
             <table class="w-full text-left font-bold text-slate-300 text-[10px] list-table">
                 <thead class="text-slate-500 border-b border-white/5 uppercase">
-                    <tr><th class="py-2 px-1">일시</th><th>번호</th><th>모델</th><th>차대번호</th><th>성함/연락처</th></tr>
+                    <tr><th class="py-2 px-1">일시</th><th>번호</th><th>모델</th><th>성함/연락처</th><th>비용/상태</th></tr>
                 </thead>
                 <tbody id="list-body"></tbody>
             </table>
@@ -100,16 +100,16 @@
         <div class="bg-slate-900 w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden relative shadow-2xl">
             <button onclick="closeModal('edit-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white">&times;</button>
             <div class="p-6">
-                <h2 class="text-lg font-black text-blue-500 mb-4 uppercase italic">Vehicle Info & Maintenance History</h2>
+                <h2 class="text-lg font-black text-blue-500 mb-4 uppercase italic">Vehicle Info & Costs</h2>
                 <input type="hidden" id="m-id">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <div class="input-group"><label>차량 번호</label><input type="text" id="m-car" oninput="fetchInfo(this.value, 'm')" class="uppercase font-black text-blue-400"></div>
-                        <div class="input-group"><label>고객명</label><input type="text" id="m-name"></div>
-                        <div class="input-group"><label>연락처</label><input type="text" id="m-phone"></div>
+                        <div class="input-group"><label>고객명/연락처</label><div class="flex gap-1"><input type="text" id="m-name" class="w-1/2"><input type="text" id="m-phone" class="w-1/2" placeholder="연락처"></div></div>
                         <div class="input-group"><label>차대번호 (VIN)</label><input type="text" id="m-vin"></div>
-                        <div class="input-group"><label>최초 등록일</label><input type="date" id="m-first-date"></div>
-                        <div class="input-group"><label class="text-blue-400">이전 정비 이력 (Auto-load)</label>
+                        <div class="input-group"><label>부품 내역</label><textarea id="m-parts" class="h-14" placeholder="사용 부품 리스트"></textarea></div>
+                        <div class="input-group"><label>정비 공임 (₩)</label><input type="number" id="m-labor" placeholder="공임비 입력"></div>
+                        <div class="input-group"><label class="text-blue-400">이전 정비 이력</label>
                             <div id="m-history-list" class="history-box custom-scroll space-y-1"></div>
                         </div>
                     </div>
@@ -120,11 +120,12 @@
                             <div class="input-group"><label>시간</label><select id="m-time"></select></div>
                         </div>
                         <div class="input-group"><label>모델/km</label><div class="flex gap-1"><input type="text" id="m-model" class="w-2/3"><input type="number" id="m-km" class="w-1/3"></div></div>
-                        <div class="input-group"><label>정비 요청 상세</label><textarea id="m-desc" class="h-24"></textarea></div>
+                        <div class="input-group"><label>최초 등록일</label><input type="date" id="m-first-date"></div>
+                        <div class="input-group"><label>정비 상세 내용</label><textarea id="m-desc" class="h-20"></textarea></div>
                     </div>
                 </div>
                 <div class="flex gap-2 mt-6">
-                    <button onclick="deleteRecord('repairs', 'm-id')" id="del-btn" class="flex-1 py-3 bg-red-600/80 text-white rounded-xl font-bold text-sm">데이터 삭제</button>
+                    <button onclick="deleteRecord('repairs', 'm-id')" class="flex-1 py-3 bg-red-600/80 text-white rounded-xl font-bold text-sm">삭제</button>
                     <button onclick="saveData()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-black text-sm">정보 저장</button>
                     <button onclick="releaseVehicle()" id="rel-btn" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black text-sm">차량 출고</button>
                 </div>
@@ -135,7 +136,7 @@
     <div id="c-modal" class="fixed inset-0 bg-black/95 z-[9950] hidden items-center justify-center p-2">
         <div class="bg-slate-900 w-full max-w-lg rounded-3xl p-6 border border-amber-500/20 shadow-2xl relative">
             <button onclick="closeModal('c-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white">&times;</button>
-            <h2 class="text-lg font-black text-amber-500 mb-4 uppercase">Customer Master</h2>
+            <h2 class="text-lg font-black italic text-amber-500 mb-4 uppercase">Customer History Master</h2>
             <input type="hidden" id="c-id">
             <div class="space-y-3">
                 <div class="grid grid-cols-2 gap-3">
@@ -147,12 +148,12 @@
                     <div class="input-group"><label>최초 등록일</label><input type="date" id="c-first-date"></div>
                 </div>
                 <div class="bg-slate-800 p-3 rounded-xl border border-white/5">
-                    <p class="text-[10px] text-amber-500 font-bold mb-1 italic">정비 히스토리</p>
+                    <p class="text-[10px] text-amber-500 font-bold mb-1 italic">정비 히스토리 (공임/부품 포함)</p>
                     <div id="c-history-list" class="max-h-40 overflow-y-auto space-y-2 custom-scroll text-[10px]"></div>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="deleteRecord('customers', 'c-id')" class="flex-1 py-3 bg-red-900 text-white rounded-xl font-bold text-sm">고객 삭제</button>
-                    <button onclick="saveCustomer()" class="flex-[2] py-3 bg-amber-600 text-white rounded-xl font-black mt-2 text-sm shadow-xl">정보 업데이트</button>
+                    <button onclick="saveCustomer()" class="flex-[2] py-3 bg-amber-600 text-white rounded-xl font-black mt-2 text-sm">정보 업데이트</button>
                 </div>
             </div>
         </div>
@@ -206,7 +207,6 @@
                 document.querySelectorAll('.dr-zone').forEach(z => z.innerHTML = ""); 
                 document.getElementById('list-body').innerHTML = "";
                 const todayStr = new Date().toISOString().split('T')[0];
-                const tomStr = new Date(new Date().setDate(new Date().getDate()+1)).toISOString().split('T')[0];
                 const events = [];
 
                 for(let id in data) {
@@ -221,13 +221,12 @@
                     document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5" onclick="openEditModal('${id}')">
                         <td class="py-2 px-1"><span>${car.date}</span><br><span class="text-[8px] opacity-50">${car.r_time||''}</span></td>
                         <td class="text-blue-400 text-xs">${car.carNo}</td><td class="text-[9px] text-slate-300">${car.model||'-'}</td>
-                        <td class="text-[8px] opacity-40 italic font-mono">${car.vin||'-'}</td><td class="text-[9px]"><span class="text-white">${car.name}</span><br><span class="text-amber-500 text-[8px]">${car.phone||'-'}</span></td>
+                        <td class="text-[9px]"><span class="text-white">${car.name}</span></td>
+                        <td class="text-[10px] text-emerald-400">₩${(car.labor||0).toLocaleString()}</td>
                     </tr>`;
 
                     if(car.bay == "0") {
-                        if(car.date === todayStr) document.getElementById('today-zone').innerHTML += carHtml;
-                        else if(car.date === tomStr) document.getElementById('tomorrow-zone').innerHTML += carHtml;
-                        else document.getElementById('other-zone').innerHTML += carHtml;
+                        document.getElementById('today-zone').innerHTML += carHtml;
                     } else if(car.bay == "99") document.getElementById('done-zone').innerHTML += carHtml;
                     else {
                         const target = document.getElementById(`bay-zone-${car.bay}`);
@@ -247,9 +246,7 @@
 
         function openEditModal(id) {
             document.getElementById('m-id').value = id || "";
-            document.getElementById('rel-btn').style.display = id ? "block" : "none";
-            document.getElementById('del-btn').style.display = id ? "block" : "none";
-            document.getElementById('m-history-list').innerHTML = ""; // 초기화
+            document.getElementById('m-history-list').innerHTML = "로딩 중...";
             if(id) {
                 db.ref('repairs/'+id).once('value', s => {
                     const d = s.val();
@@ -259,7 +256,8 @@
                     document.getElementById('m-model').value = d.model; document.getElementById('m-km').value = d.km;
                     document.getElementById('m-desc').value = d.desc; document.getElementById('m-first-date').value = d.firstDate || "";
                     document.getElementById('m-vin').value = d.vin || "";
-                    // [추가] 과거 이력 불러오기
+                    document.getElementById('m-parts').value = d.parts || ""; // 부품 추가
+                    document.getElementById('m-labor').value = d.labor || ""; // 공임 추가
                     loadHistoryIntoModal(d.carNo);
                 });
             } else document.querySelectorAll('#edit-modal input, #edit-modal textarea').forEach(i => i.value = "");
@@ -268,29 +266,30 @@
 
         function loadHistoryIntoModal(carNo) {
             db.ref('customers').orderByChild('carNo').equalTo(carNo).once('value', s => {
+                const hList = document.getElementById('m-history-list'); hList.innerHTML = "";
                 if(s.exists()){
                     const d = Object.values(s.val())[0];
-                    const hList = document.getElementById('m-history-list');
                     if(d.history) Object.values(d.history).reverse().forEach(h => {
-                        hList.innerHTML += `<div class="border-b border-white/5 pb-1 mb-1"><b>[${h.date}]</b> ${h.desc} (${h.mechanic||'-'})</div>`;
+                        hList.innerHTML += `<div class="border-b border-white/5 pb-1 mb-1"><b>[${h.date}]</b> ${h.desc} (₩${(h.labor||0).toLocaleString()})</div>`;
                     });
-                    else hList.innerHTML = "이력이 없습니다.";
-                }
+                    else hList.innerHTML = "이력 없음";
+                } else hList.innerHTML = "신규 차량";
             });
         }
 
-        function deleteRecord(path, idField) {
-            const id = document.getElementById(idField).value;
-            if(!id) return;
-            if(confirm("정말로 이 데이터를 삭제하시겠습니까? (복구 불가)")) {
-                db.ref(path + '/' + id).remove().then(() => {
-                    alert("삭제되었습니다.");
-                    closeModal(idField === 'm-id' ? 'edit-modal' : 'c-modal');
+        function releaseVehicle() {
+            const id = document.getElementById('m-id').value;
+            db.ref('repairs/'+id).once('value', s => {
+                const d = s.val();
+                // 출고 시 정비 이력에 모든 정보(공임, 부품 포함) 저장
+                const historyItem = { date: d.date, desc: d.desc, km: d.km, mechanic: d.mechanic, labor: d.labor || 0, parts: d.parts || "없음" };
+                db.ref('customers').orderByChild('carNo').equalTo(d.carNo).once('value', cs => {
+                    if(cs.exists()) db.ref('customers/'+Object.keys(cs.val())[0]+'/history').push(historyItem);
                 });
-            }
+                db.ref('repairs/'+id).remove().then(() => { alert("출고완료/이력저장"); closeModal('edit-modal'); });
+            });
         }
 
-        // [나머지 V6.0 핵심 로직 동일 유지]
         function saveData() {
             const id = document.getElementById('m-id').value;
             const data = {
@@ -299,7 +298,8 @@
                 date: document.getElementById('m-date').value, r_time: document.getElementById('m-time').value,
                 model: document.getElementById('m-model').value, km: document.getElementById('m-km').value, 
                 desc: document.getElementById('m-desc').value, firstDate: document.getElementById('m-first-date').value,
-                vin: document.getElementById('m-vin').value.toUpperCase()
+                vin: document.getElementById('m-vin').value.toUpperCase(),
+                parts: document.getElementById('m-parts').value, labor: document.getElementById('m-labor').value
             };
             if(!data.carNo) return alert("번호 필수");
             db.ref('customers').orderByChild('carNo').equalTo(data.carNo).once('value', s => {
@@ -311,16 +311,10 @@
             else { data.bay = "0"; db.ref('repairs').push(data).then(() => closeModal('edit-modal')); }
         }
 
-        function releaseVehicle() {
-            const id = document.getElementById('m-id').value;
-            db.ref('repairs/'+id).once('value', s => {
-                const d = s.val();
-                const historyItem = { date: d.date, desc: d.desc, km: d.km, mechanic: d.mechanic, phone: d.phone, vin: d.vin };
-                db.ref('customers').orderByChild('carNo').equalTo(d.carNo).once('value', cs => {
-                    if(cs.exists()) db.ref('customers/'+Object.keys(cs.val())[0]+'/history').push(historyItem);
-                });
-                db.ref('repairs/'+id).remove().then(() => { alert("출고완료/이력저장"); closeModal('edit-modal'); });
-            });
+        function deleteRecord(path, idField) {
+            const id = document.getElementById(idField).value;
+            if(!id || !confirm("정말로 삭제하시겠습니까?")) return;
+            db.ref(path + '/' + id).remove().then(() => { alert("삭제됨"); closeModal(idField === 'm-id' ? 'edit-modal' : 'c-modal'); });
         }
 
         function fetchInfo(carNo, prefix) {
@@ -341,7 +335,7 @@
                 s.forEach(c => {
                     const d = c.val();
                     if(d.carNo.includes(key.toUpperCase()) || d.name.includes(key)) {
-                        grid.innerHTML += `<div class="bg-slate-800 p-4 rounded-2xl border border-white/5 shadow-lg" onclick="openCustomerModal('${c.key}')">
+                        grid.innerHTML += `<div class="bg-slate-800 p-4 rounded-2xl border border-white/5 shadow-lg active:scale-95 transition-transform" onclick="openCustomerModal('${c.key}')">
                             <p class="text-amber-500 font-black text-sm uppercase">${d.carNo}</p>
                             <p class="text-[10px] text-white font-bold">${d.name} | ${d.model||'-'}</p>
                         </div>`;
@@ -358,7 +352,11 @@
                 document.getElementById('c-model').value = d.model || ""; document.getElementById('c-first-date').value = d.firstDate || "";
                 const hList = document.getElementById('c-history-list'); hList.innerHTML = "";
                 if(d.history) Object.values(d.history).reverse().forEach(h => {
-                    hList.innerHTML += `<div class="bg-slate-900/50 p-2 rounded-lg border border-white/5"><b>[${h.date}]</b> ${h.desc} <br> <span class="opacity-50">${h.mechanic||'-'}</span></div>`;
+                    hList.innerHTML += `<div class="bg-slate-900/50 p-2 rounded-lg border border-white/5">
+                        <div class="flex justify-between text-amber-500 font-black"><span>📅 ${h.date}</span><span>👤 ${h.mechanic||'-'}</span></div>
+                        <p class="text-white my-1">${h.desc}</p>
+                        <div class="text-[9px] text-blue-300">🛠 부품: ${h.parts||'-'} / 💰 공임: ₩${(h.labor||0).toLocaleString()}</div>
+                    </div>`;
                 });
             });
             document.getElementById('c-modal').style.display = 'flex';
@@ -366,17 +364,7 @@
 
         function saveCustomer() {
             const id = document.getElementById('c-id').value;
-            db.ref('customers/'+id).update({ carNo: document.getElementById('c-car').value.toUpperCase(), name: document.getElementById('c-name').value, model: document.getElementById('c-model').value, firstDate: document.getElementById('c-first-date').value }).then(() => { alert("저장 완료"); closeModal('c-modal'); });
-        }
-
-        function initDraggable() {
-            document.querySelectorAll('.dr-zone').forEach(el => {
-                new Sortable(el, { group: 'vehicles', animation: 200, delay: 100, delayOnTouchOnly: true, onEnd: (evt) => {
-                    const idTag = evt.item.getAttribute('onclick');
-                    const id = idTag.match(/'([^']+)'/)[1];
-                    db.ref('repairs/' + id).update({ bay: evt.to.getAttribute('data-bay').includes('-') ? "0" : evt.to.getAttribute('data-bay') });
-                }});
-            });
+            db.ref('customers/'+id).update({ carNo: document.getElementById('c-car').value.toUpperCase(), name: document.getElementById('c-name').value, model: document.getElementById('c-model').value, firstDate: document.getElementById('c-first-date').value }).then(() => { alert("저장됨"); closeModal('c-modal'); });
         }
 
         function initCalendar() {
@@ -391,6 +379,8 @@
         function toggleResMode(m) {
             document.getElementById('cal-view').style.display = (m==='cal'?'block':'none');
             document.getElementById('list-view').style.display = (m==='list'?'block':'none');
+            document.getElementById('btn-m-cal').className = (m==='cal') ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
+            document.getElementById('btn-m-list').className = (m==='list') ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
             if(m==='cal') calendar.updateSize();
         }
 
@@ -400,6 +390,16 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-'+id).classList.add('active');
             if(id==='res' && calendar) setTimeout(() => calendar.updateSize(), 200);
+        }
+
+        function initDraggable() {
+            document.querySelectorAll('.dr-zone').forEach(el => {
+                new Sortable(el, { group: 'vehicles', animation: 200, delay: 100, delayOnTouchOnly: true, onEnd: (evt) => {
+                    const idTag = evt.item.getAttribute('onclick');
+                    const id = idTag.match(/'([^']+)'/)[1];
+                    db.ref('repairs/' + id).update({ bay: evt.to.getAttribute('data-bay').includes('-') ? "0" : evt.to.getAttribute('data-bay') });
+                }});
+            });
         }
 
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
