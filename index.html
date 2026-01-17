@@ -95,7 +95,7 @@
 
     <main id="tab-customer" class="tab-content p-4 gap-4 bg-slate-950">
         <div class="flex flex-col md:flex-row gap-2 items-center justify-between">
-            <input type="text" id="cust-search" oninput="syncCustomerDB(this.value)" placeholder="차량번호 뒷4자리 또는 이름 검색..." class="flex-1 bg-slate-800 p-3 rounded-xl outline-none border border-white/5 focus:border-amber-500 text-sm font-bold text-white w-full">
+            <input type="text" id="cust-search" oninput="syncCustomerDB(this.value)" placeholder="차량번호(끝4자리)/이름 검색..." class="flex-1 bg-slate-800 p-3 rounded-xl outline-none border border-white/5 focus:border-amber-500 text-sm font-bold text-white w-full">
             <div class="flex gap-2 shrink-0">
                 <button onclick="toggleSelectAllCustomers()" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold border border-white/10 uppercase">Select All</button>
                 <button onclick="deleteSelectedCustomers()" class="bg-red-600 px-4 py-2 rounded-xl text-xs font-black shadow-lg uppercase">Bulk Delete</button>
@@ -167,6 +167,7 @@
         const db = firebase.database();
         let calendar;
 
+        // 접속 해결: 로그인 체크 루틴 원상 복구
         function login() {
             if(document.getElementById('pw').value === "9999") {
                 document.getElementById('login-layer').style.display = 'none';
@@ -232,7 +233,7 @@
             });
         }
 
-        // [이관 엔진 - V8.1 마스터 전용]
+        // [이관 엔진 - V8.1 마스터 전전용] 연락처(5번째), 등록일(14번째) 매칭
         async function processCSV() {
             const fileInput = document.getElementById('csv-file');
             const status = document.getElementById('upload-status');
@@ -246,10 +247,10 @@
                     if (cols.length >= 7 && cols[2]) {
                         const carNo = cols[2].trim();
                         const name = cols[3].trim();
-                        const phone = cols[4].trim();
-                        const model = cols[5].trim();
-                        const vin = cols[6].trim();
-                        const firstDate = cols[13].trim(); // 비고란(등록일)
+                        const phone = cols[4] ? cols[4].trim() : "";  // 5번째 칸: 연락처
+                        const model = cols[5] ? cols[5].trim() : "";  // 6번째 칸: 모델
+                        const vin = cols[6] ? cols[6].trim() : "";    // 7번째 칸: 차대번호
+                        const firstDate = cols[13] ? cols[13].trim() : ""; // 14번째 칸: 최초등록일
 
                         if (carNo.length > 3) {
                             const data = { carNo, name, phone, model, vin, firstDate };
@@ -267,13 +268,14 @@
             reader.readAsText(fileInput.files[0], 'EUC-KR');
         }
 
-        // [검색 엔진 - 숫자 4자리 및 이름 통합]
+        // [검색 엔진 - 숫자 4자리 및 이름 통합 검색]
         function syncCustomerDB(key) {
             db.ref('customers').once('value', s => {
                 const grid = document.getElementById('customer-grid'); grid.innerHTML = "";
                 const search = key.toUpperCase();
                 s.forEach(c => {
                     const d = c.val();
+                    // 차량번호(끝 4자리 검색 포함) 또는 성함에 검색어 포함 시 노출
                     if(d.carNo.includes(search) || d.name.includes(key)) {
                         grid.innerHTML += `<div class="bg-card p-4 rounded-2xl border border-white/5 relative active:scale-95 transition-all">
                             <input type="checkbox" value="${c.key}" class="cust-chk db-checkbox absolute top-3 right-3">
@@ -287,7 +289,7 @@
             });
         }
 
-        // 공통 기능 (수정 없이 유지)
+        // 기본 유지 기능들
         function toggleSelectAllCustomers() { document.querySelectorAll('.cust-chk').forEach(cb => cb.checked = !cb.checked); }
         async function deleteSelectedCustomers() {
             const selected = Array.from(document.querySelectorAll('.cust-chk:checked')).map(cb => cb.value);
