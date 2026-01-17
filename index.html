@@ -16,41 +16,43 @@
         body { font-family: 'Noto Sans KR', sans-serif; background: #0f172a; color: #f1f5f9; overflow: hidden; }
         .bg-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
         .bay-box { min-height: 150px; border: 2px dashed #334155; border-radius: 24px; transition: 0.3s; }
-        .car-card { cursor: grab; background: #334155; padding: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
+        .car-card { cursor: grab; background: #334155; padding: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .car-card:active { cursor: grabbing; scale: 1.02; }
         .tab-btn.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; }
         .tab-content { display: none; }
         .tab-content.active { display: flex; }
-        .input-group label { display: block; font-size: 10px; font-weight: 900; color: #64748b; margin-bottom: 4px; text-transform: uppercase; }
-        .input-group input, .input-group select, .input-group textarea { width: 100%; background: #f8fafc; border: none; border-radius: 12px; padding: 12px; color: #1e293b; font-weight: 700; outline: none; }
+        /* 예약 폼 스타일 (사진과 동일하게 구성) */
+        .input-group label { display: block; font-size: 10px; font-weight: 900; color: #94a3b8; margin-bottom: 4px; text-transform: uppercase; }
+        .input-group input, .input-group select, .input-group textarea { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 12px; color: #fff; font-weight: 500; outline: none; }
+        .input-group input:focus { border-color: #3b82f6; }
         .custom-scroll::-webkit-scrollbar { width: 5px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
 <body class="h-screen flex flex-col">
 
-    <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[1000] flex items-center justify-center p-6">
+    <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[3000] flex items-center justify-center p-6">
         <div class="bg-slate-900 p-12 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5 text-center">
-            <h1 class="text-3xl font-black italic text-blue-500 mb-8 tracking-tighter">LK MOTORS ERP</h1>
+            <h1 class="text-3xl font-black italic text-blue-500 mb-8">LK MOTORS ERP</h1>
             <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center outline-none border border-transparent focus:border-blue-500 text-white">
-            <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-black hover:bg-blue-500 transition shadow-lg shadow-blue-500/20">시스템 접속</button>
+            <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-black hover:bg-blue-500 transition shadow-lg">시스템 접속</button>
         </div>
     </div>
 
     <nav class="h-16 bg-slate-900 border-b border-white/5 flex items-center px-6 justify-between shrink-0">
         <div class="flex gap-10 h-full">
-            <button onclick="showTab('status')" id="btn-status" class="tab-btn active px-1 font-black italic text-sm uppercase tracking-widest">현장 관제 현황판</button>
-            <button onclick="showTab('calendar')" id="btn-calendar" class="tab-btn px-1 font-black italic text-sm uppercase tracking-widest">예약 일정 관리</button>
+            <button onclick="showTab('status')" id="btn-status" class="tab-btn active px-1 font-black italic text-sm uppercase">현장 관제 현황판</button>
+            <button onclick="showTab('calendar')" id="btn-calendar" class="tab-btn px-1 font-black italic text-sm uppercase">예약 일정 캘린더</button>
         </div>
-        <button onclick="openModal('reg-modal')" class="bg-blue-600 px-6 py-2.5 rounded-xl font-black text-xs text-white shadow-lg">
-            <i class="fas fa-plus mr-2"></i>신규 정비 예약
+        <button onclick="openModal('reg-modal')" class="bg-blue-600 px-6 py-2.5 rounded-xl font-black text-xs text-white">
+            <i class="fas fa-plus mr-2"></i>신규 예약 등록
         </button>
     </nav>
 
     <main id="tab-status" class="tab-content active flex-1 overflow-hidden p-4 gap-4">
         <aside class="w-80 bg-card rounded-[35px] p-6 flex flex-col shadow-2xl">
             <h3 class="text-blue-400 font-black text-xs mb-5 flex justify-between items-center tracking-widest italic uppercase">
-                <span><i class="fas fa-list-ul mr-2"></i>Repair Wait List</span>
+                <span><i class="fas fa-clock mr-2"></i>Repair Wait List</span>
                 <span id="wait-count" class="bg-blue-500/20 text-blue-400 px-2.5 py-0.5 rounded-full text-[10px]">0</span>
             </h3>
             <div id="wait-zone" class="flex-1 overflow-y-auto dr-zone custom-scroll" data-bay="0"></div>
@@ -71,11 +73,11 @@
     </main>
 
     <div id="reg-modal" class="fixed inset-0 bg-black/90 z-[2000] hidden items-center justify-center p-4 backdrop-blur-xl">
-        <div class="bg-white w-full max-w-2xl rounded-[50px] shadow-2xl overflow-hidden text-slate-900">
+        <div class="bg-slate-900 w-full max-w-2xl rounded-[50px] shadow-2xl overflow-hidden text-white border border-white/10">
             <div class="p-10">
                 <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-3xl font-black italic tracking-tighter">New Reservation</h2>
-                    <button onclick="closeModal('reg-modal')" class="text-slate-300 hover:text-red-500 text-4xl transition">&times;</button>
+                    <h2 class="text-2xl font-black italic text-blue-500 uppercase tracking-tighter">New Reservation</h2>
+                    <button onclick="closeModal('reg-modal')" class="text-slate-500 hover:text-white text-3xl transition">&times;</button>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-6">
@@ -92,8 +94,8 @@
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>차종 / 모델명</label>
-                            <input type="text" id="r-model" placeholder="예: ACTROS">
+                            <label>차종 및 형식</label>
+                            <input type="text" id="r-model" placeholder="예: 벤츠 트럭 / 악트로스">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="input-group">
@@ -103,10 +105,10 @@
                             <div class="input-group">
                                 <label>엔진 타입</label>
                                 <select id="r-engine">
-                                    <option value="가솔린">가솔린</option>
-                                    <option value="디젤">디젤</option>
-                                    <option value="하이브리드">하이브리드</option>
-                                    <option value="전기">전기</option>
+                                    <option value="디젤">디젤 (Diesel)</option>
+                                    <option value="가솔린">가솔린 (Gasoline)</option>
+                                    <option value="LNG">LNG</option>
+                                    <option value="전기">전기 (EV)</option>
                                 </select>
                             </div>
                         </div>
@@ -124,22 +126,22 @@
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>정비 항목 (주요 요청)</label>
+                            <label>정비 구분</label>
                             <select id="r-type">
                                 <option value="일반정비">일반정비 / 소모품</option>
-                                <option value="엔진수리">엔진 / 미션 수리</option>
-                                <option value="판금도색">판금 / 도색</option>
-                                <option value="정기점검">정기 점검</option>
+                                <option value="엔진미션">엔진 / 미션 수리</option>
+                                <option value="보증수리">보증수리 (Warranty)</option>
+                                <option value="사고정비">사고 정비 (보험)</option>
                             </select>
                         </div>
                         <div class="input-group">
-                            <label>상세 정비 요청 내용</label>
-                            <textarea id="r-desc" placeholder="고객님의 요청사항을 상세히 기록하세요." class="h-32 resize-none"></textarea>
+                            <label>정비 요청 상세 내용</label>
+                            <textarea id="r-desc" placeholder="증상 및 요청사항을 입력하세요." class="h-32 resize-none"></textarea>
                         </div>
                     </div>
                 </div>
 
-                <button onclick="saveReservation()" class="w-full py-5 bg-blue-600 text-white rounded-[24px] font-black text-xl mt-10 shadow-xl shadow-blue-200 hover:bg-blue-700 transition transform active:scale-95">예약 확정 및 시스템 등록</button>
+                <button onclick="saveReservation()" class="w-full py-5 bg-blue-600 text-white rounded-[24px] font-black text-xl mt-10 shadow-xl shadow-blue-500/20">예약 확정 및 등록</button>
             </div>
         </div>
     </div>
@@ -164,7 +166,7 @@
                 initBays();
                 initCalendar();
                 initSortable();
-            } else { alert("비밀번호가 일치하지 않습니다."); }
+            } else { alert("비밀번호 불일치"); }
         }
 
         function initBays() {
@@ -173,7 +175,7 @@
             for(let i=1; i<=10; i++) {
                 grid.innerHTML += `
                     <div class="bg-card rounded-[35px] p-5 flex flex-col gap-4 relative shadow-xl">
-                        <span class="text-[11px] font-black text-slate-500 italic">SYSTEM BAY ${i}</span>
+                        <span class="text-[11px] font-black text-slate-500 italic uppercase">SYSTEM BAY ${i}</span>
                         <div id="bay-zone-${i}" class="bay-box dr-zone flex flex-col gap-2" data-bay="${i}"></div>
                     </div>`;
             }
@@ -185,7 +187,6 @@
                 new Sortable(el, {
                     group: 'vehicles',
                     animation: 250,
-                    ghostClass: 'sortable-ghost',
                     onEnd: (evt) => {
                         updateVehicleBay(evt.item.getAttribute('data-id'), evt.to.getAttribute('data-bay'));
                     }
@@ -194,8 +195,8 @@
         }
 
         function startSync() {
-            db.ref('repairs').on('value', (snapshot) => {
-                const data = snapshot.val();
+            db.ref('repairs').on('value', (s) => {
+                const data = s.val();
                 document.querySelectorAll('.dr-zone').forEach(z => z.innerHTML = "");
                 let waitCount = 0;
                 const events = [];
@@ -208,8 +209,7 @@
                                 <p class="text-blue-400 font-black text-sm">${car.carNo}</p>
                                 <span class="text-[9px] text-slate-500 font-bold">${car.r_time || ''}</span>
                             </div>
-                            <p class="text-[11px] font-bold text-slate-200">${car.name} <span class="opacity-40 ml-1">| ${car.model || ''}</span></p>
-                            <p class="text-[9px] mt-2 text-slate-400 line-clamp-1">${car.desc || ''}</p>
+                            <p class="text-[11px] font-bold text-slate-200">${car.name} <span class="opacity-40 text-[9px]">| ${car.model || ''}</span></p>
                         </div>`;
                     
                     if(car.bay == "0") { document.getElementById('wait-zone').innerHTML += carHtml; waitCount++; }
@@ -226,15 +226,13 @@
         }
 
         function updateVehicleBay(id, bay) {
-            let status = "정비진행";
-            if(bay == "0") status = "수리대기";
-            if(bay == "99") status = "출고완료";
+            let status = bay == "99" ? "출고완료" : (bay == "0" ? "대기중" : "정비중");
             db.ref('repairs/' + id).update({ bay: bay, status: status });
         }
 
         function saveReservation() {
             const carNo = document.getElementById('r-car').value;
-            if(!carNo) return alert("차량 번호는 필수 입력 사항입니다.");
+            if(!carNo) return alert("차량 번호 필수!");
 
             db.ref('repairs').push({
                 carNo: carNo,
@@ -249,18 +247,14 @@
                 desc: document.getElementById('r-desc').value,
                 bay: "0",
                 status: "수리대기"
-            }).then(() => {
-                alert("정비 예약이 시스템에 정상 등록되었습니다.");
-                closeModal('reg-modal');
-            });
+            }).then(() => { closeModal('reg-modal'); });
         }
 
         function initCalendar() {
             calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView: 'dayGridMonth',
                 locale: 'ko',
-                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
-                height: 'auto'
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' }
             });
             calendar.render();
         }
@@ -270,7 +264,7 @@
             document.getElementById('tab-' + id).classList.add('active');
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-' + id).classList.add('active');
-            if(id === 'calendar') setTimeout(() => { calendar.updateSize(); }, 200);
+            if(id === 'calendar') setTimeout(() => { calendar.render(); }, 200);
         }
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
