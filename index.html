@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - 통합 관제 시스템 V3.2</title>
+    <title>LK MOTORS - 통합 관제 시스템 V3.3</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,9 +15,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; background: #0f172a; color: #f1f5f9; overflow: hidden; }
         .bg-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
-        .dr-zone { min-height: 180px; border: 2px dashed #334155; border-radius: 24px; padding: 10px; transition: 0.3s; }
+        .dr-zone { min-height: 160px; border: 2px dashed #334155; border-radius: 24px; padding: 10px; transition: 0.3s; }
         .car-card { cursor: grab; background: #334155; padding: 12px; border-radius: 16px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); }
-        .car-card:active { cursor: grabbing; }
         .tab-btn.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; }
         .tab-content { display: none; width: 100%; height: 100%; }
         .tab-content.active { display: flex; flex-direction: column; }
@@ -33,7 +32,7 @@
         <div class="bg-slate-900 p-12 rounded-[40px] shadow-2xl w-full max-w-sm text-center border border-white/5">
             <h1 class="text-3xl font-black italic text-blue-500 mb-8 uppercase">LK MOTORS</h1>
             <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center text-white font-bold outline-none">
-            <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-black">접속하기</button>
+            <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-black">LOGIN</button>
         </div>
     </div>
 
@@ -42,68 +41,66 @@
             <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black italic text-sm">작업 현황판</button>
             <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black italic text-sm">예약 관리</button>
         </div>
-        <button onclick="openEditModal(null)" class="bg-blue-600 px-6 py-2 rounded-xl font-black text-xs text-white shadow-lg">
-            <i class="fas fa-plus mr-2"></i>예약 등록
-        </button>
+        <button onclick="openEditModal(null)" class="bg-blue-600 px-6 py-2 rounded-xl font-black text-xs text-white">신규 예약 등록</button>
     </nav>
 
     <main id="tab-status" class="tab-content active p-4 gap-4">
         <section class="grid grid-cols-5 gap-4 mb-2" id="bay-grid"></section>
-
         <section class="flex-1 grid grid-cols-4 gap-4 overflow-hidden">
-            <div class="bg-card rounded-[30px] p-5 flex flex-col shadow-xl">
+            <div class="bg-card rounded-[30px] p-5 flex flex-col">
                 <h3 class="text-blue-400 font-black text-xs mb-4 uppercase italic border-b border-white/5 pb-2">수리 대기 (오늘)</h3>
                 <div id="today-zone" class="flex-1 overflow-y-auto dr-zone custom-scroll" data-bay="0"></div>
             </div>
-            <div class="bg-card rounded-[30px] p-5 flex flex-col shadow-xl">
+            <div class="bg-card rounded-[30px] p-5 flex flex-col">
                 <h3 class="text-indigo-400 font-black text-xs mb-4 uppercase italic border-b border-white/5 pb-2">내일 예약</h3>
                 <div id="tomorrow-zone" class="flex-1 overflow-y-auto custom-scroll"></div>
             </div>
-            <div class="bg-card rounded-[30px] p-5 flex flex-col shadow-xl border-t-4 border-amber-500">
-                <h3 class="text-amber-500 font-black text-xs mb-4 uppercase italic border-b border-white/5 pb-2">기타/대기차량</h3>
-                <div id="ready-zone" class="flex-1 overflow-y-auto custom-scroll"></div>
+            <div class="bg-card rounded-[30px] p-5 flex flex-col border-t-4 border-amber-500">
+                <h3 class="text-amber-500 font-black text-xs mb-4 uppercase italic border-b border-white/5 pb-2">기타 대기차량</h3>
+                <div id="other-zone" class="flex-1 overflow-y-auto custom-scroll"></div>
             </div>
-            <div class="bg-card rounded-[30px] p-5 flex flex-col shadow-xl border-l-4 border-emerald-500">
-                <h3 class="text-emerald-400 font-black text-xs mb-5 italic uppercase border-b border-white/5 pb-2">완료/출고</h3>
+            <div class="bg-card rounded-[30px] p-5 flex flex-col border-l-4 border-emerald-500">
+                <h3 class="text-emerald-400 font-black text-xs mb-4 italic uppercase border-b border-white/5 pb-2">완료/출고</h3>
                 <div id="done-zone" class="flex-1 overflow-y-auto dr-zone custom-scroll" data-bay="99"></div>
             </div>
         </section>
     </main>
 
-    <main id="tab-res" class="tab-content p-6 overflow-hidden">
-        <div id="calendar-box" class="flex-1 bg-slate-900 rounded-[30px] p-6 shadow-2xl border border-white/5">
-            <div id='calendar'></div>
+    <main id="tab-res" class="tab-content p-6 gap-4 overflow-hidden">
+        <div class="flex gap-2">
+            <button onclick="toggleResMode('cal')" id="btn-cal" class="bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold">캘린더 보기</button>
+            <button onclick="toggleResMode('list')" id="btn-list" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold">리스트 보기</button>
+        </div>
+        <div id="cal-view" class="flex-1 bg-slate-900 rounded-[30px] p-6 shadow-2xl overflow-hidden"><div id='calendar'></div></div>
+        <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-[30px] p-6 shadow-2xl overflow-y-auto custom-scroll">
+            <table class="w-full text-left text-xs"><thead class="text-slate-500 border-b border-white/5"><tr><th class="py-4">날짜</th><th>차량번호</th><th>고객명</th><th>내용</th></tr></thead><tbody id="list-body"></tbody></table>
         </div>
     </main>
 
     <div id="edit-modal" class="fixed inset-0 bg-black/90 z-[4000] hidden items-center justify-center p-4 backdrop-blur-xl">
-        <div class="bg-slate-900 w-full max-w-2xl rounded-[50px] shadow-2xl border border-white/10 overflow-hidden">
-            <div class="p-10">
-                <h2 class="text-2xl font-black italic text-blue-500 mb-8 uppercase" id="modal-title">Edit Reservation</h2>
-                <input type="hidden" id="target-id">
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <div class="input-group"><label>차량 번호</label><input type="text" id="m-car" placeholder="예: 123가 4567"></div>
-                        <div class="input-group"><label>고객명</label><input type="text" id="m-name"></div>
-                        <div class="input-group"><label>연락처</label><input type="text" id="m-phone"></div>
-                        <div class="input-group"><label>차종 / 주행거리</label>
-                            <div class="flex gap-2"><input type="text" id="m-model" placeholder="차종"><input type="number" id="m-km" placeholder="km"></div>
-                        </div>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="input-group"><label>예약 날짜</label><input type="date" id="m-date"></div>
-                            <div class="input-group"><label>시작 시간</label><input type="time" id="m-time"></div>
-                        </div>
-                        <div class="input-group"><label>정비 요청 상세 내용</label><textarea id="m-desc" class="h-32 resize-none"></textarea></div>
-                    </div>
+        <div class="bg-slate-900 w-full max-w-2xl rounded-[50px] shadow-2xl border border-white/10 overflow-hidden p-10">
+            <h2 class="text-2xl font-black italic text-blue-500 mb-8 uppercase" id="m-title">Edit Vehicle</h2>
+            <input type="hidden" id="m-id">
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div class="input-group"><label>차량 번호</label><input type="text" id="m-car"></div>
+                    <div class="input-group"><label>고객명</label><input type="text" id="m-name"></div>
+                    <div class="input-group"><label>연락처</label><input type="text" id="m-phone"></div>
                 </div>
-                <div class="flex gap-4 mt-8">
-                    <button onclick="closeModal()" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">취소</button>
-                    <button onclick="saveData()" class="flex-[2] py-4 bg-blue-600 rounded-2xl font-black text-lg">데이터 저장하기</button>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="input-group"><label>예약 날짜</label><input type="date" id="m-date"></div>
+                        <div class="input-group"><label>시간</label><input type="time" id="m-time"></div>
+                    </div>
+                    <div class="input-group"><label>모델 / 주행거리</label><div class="flex gap-2"><input type="text" id="m-model" placeholder="모델"><input type="number" id="m-km" placeholder="km"></div></div>
+                    <div class="input-group"><label>정비 상세 내용</label><textarea id="m-desc" class="h-24 resize-none"></textarea></div>
                 </div>
-                <button id="del-btn" onclick="deleteData()" class="w-full mt-4 text-xs text-red-500 font-bold opacity-50 hover:opacity-100">이 차량 데이터 삭제</button>
             </div>
+            <div class="flex gap-4 mt-8">
+                <button onclick="closeModal()" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">취소</button>
+                <button onclick="saveData()" class="flex-[2] py-4 bg-blue-600 rounded-2xl font-black">저장 하기</button>
+            </div>
+            <button id="del-btn" onclick="deleteData()" class="w-full mt-4 text-[10px] text-red-500 font-bold opacity-30 hover:opacity-100 uppercase italic">Delete Record</button>
         </div>
     </div>
 
@@ -125,15 +122,14 @@
             if(document.getElementById('pw').value === "9999") {
                 document.getElementById('login-layer').style.display = 'none';
                 initBays(); initCalendar(); initDraggable();
-            } else { alert("PASSWORD ERROR"); }
+            } else { alert("PASS ERROR"); }
         }
 
         function initBays() {
             const grid = document.getElementById('bay-grid'); grid.innerHTML = "";
             for(let i=1; i<=5; i++) {
                 grid.innerHTML += `<div class="bg-card rounded-[35px] p-5 flex flex-col gap-4 shadow-xl relative">
-                    <span class="absolute top-4 left-6 text-[10px] font-black text-slate-600 italic">SYSTEM BAY ${i}</span>
-                    <div class="h-6"></div>
+                    <span class="absolute top-4 left-6 text-[10px] font-black text-slate-600 italic uppercase">BAY ${i}</span>
                     <div id="bay-zone-${i}" class="dr-zone flex-1" data-bay="${i}"></div>
                 </div>`;
             }
@@ -153,25 +149,28 @@
                 const data = s.val();
                 document.querySelectorAll('.dr-zone').forEach(z => z.innerHTML = ""); 
                 document.getElementById('tomorrow-zone').innerHTML = "";
-                document.getElementById('ready-zone').innerHTML = "";
+                document.getElementById('other-zone').innerHTML = "";
+                document.getElementById('list-body').innerHTML = "";
                 
                 const events = [];
                 const now = new Date();
                 const todayStr = now.toISOString().split('T')[0];
-                const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
-                const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                const tom = new Date(now); tom.setDate(now.getDate() + 1);
+                const tomStr = tom.toISOString().split('T')[0];
 
                 for(let id in data) {
                     const car = data[id];
                     const carHtml = `<div class="car-card" data-id="${id}" onclick="openEditModal('${id}')">
-                        <div class="flex justify-between items-center mb-1"><span class="text-blue-400 font-black text-sm underline decoration-blue-500/30">${car.carNo}</span><span class="text-[9px] font-bold text-slate-500">${car.r_time || ''}</span></div>
-                        <p class="text-[10px] font-bold text-slate-200">${car.name} <span class="opacity-40">| ${car.model || ''}</span></p>
+                        <div class="flex justify-between items-center mb-1"><span class="text-blue-500 font-black text-sm">${car.carNo}</span><span class="text-[9px] font-bold text-slate-500">${car.r_time || ''}</span></div>
+                        <p class="text-[10px] font-bold text-slate-200">${car.name} <span class="opacity-30">| ${car.model || ''}</span></p>
                     </div>`;
+
+                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5 cursor-pointer hover:bg-white/5" onclick="openEditModal('${id}')"><td class="py-4">${car.date}</td><td>${car.carNo}</td><td>${car.name}</td><td class="opacity-50">${car.desc || '-'}</td></tr>`;
 
                     if(car.bay == "0") {
                         if(car.date === todayStr) document.getElementById('today-zone').innerHTML += carHtml;
-                        else if(car.date === tomorrowStr) document.getElementById('tomorrow-zone').innerHTML += carHtml;
-                        else document.getElementById('ready-zone').innerHTML += carHtml;
+                        else if(car.date === tomStr) document.getElementById('tomorrow-zone').innerHTML += carHtml;
+                        else document.getElementById('other-zone').innerHTML += carHtml;
                     } else if(car.bay == "99") {
                         document.getElementById('done-zone').innerHTML += carHtml;
                     } else {
@@ -185,21 +184,16 @@
         }
 
         function openEditModal(id) {
-            document.getElementById('target-id').value = id || "";
-            document.getElementById('modal-title').innerText = id ? "Edit Reservation" : "New Reservation";
+            document.getElementById('m-id').value = id || "";
+            document.getElementById('m-title').innerText = id ? "Edit Vehicle Data" : "New Registration";
             document.getElementById('del-btn').style.display = id ? "block" : "none";
-
             if(id) {
                 db.ref('repairs/' + id).once('value', s => {
                     const d = s.val();
-                    document.getElementById('m-car').value = d.carNo;
-                    document.getElementById('m-name').value = d.name;
-                    document.getElementById('m-phone').value = d.phone;
-                    document.getElementById('m-date').value = d.date;
-                    document.getElementById('m-time').value = d.r_time;
-                    document.getElementById('m-model').value = d.model;
-                    document.getElementById('m-km').value = d.km;
-                    document.getElementById('m-desc').value = d.desc;
+                    document.getElementById('m-car').value = d.carNo; document.getElementById('m-name').value = d.name;
+                    document.getElementById('m-phone').value = d.phone; document.getElementById('m-date').value = d.date;
+                    document.getElementById('m-time').value = d.r_time; document.getElementById('m-model').value = d.model;
+                    document.getElementById('m-km').value = d.km; document.getElementById('m-desc').value = d.desc;
                 });
             } else {
                 document.querySelectorAll('#edit-modal input, #edit-modal textarea').forEach(i => i.value = "");
@@ -208,32 +202,34 @@
         }
 
         function saveData() {
-            const id = document.getElementById('target-id').value;
+            const id = document.getElementById('m-id').value;
             const data = {
-                carNo: document.getElementById('m-car').value,
-                name: document.getElementById('m-name').value,
-                phone: document.getElementById('m-phone').value,
-                date: document.getElementById('m-date').value,
-                r_time: document.getElementById('m-time').value,
-                model: document.getElementById('m-model').value,
-                km: document.getElementById('m-km').value,
-                desc: document.getElementById('m-desc').value
+                carNo: document.getElementById('m-car').value, name: document.getElementById('m-name').value,
+                phone: document.getElementById('m-phone').value, date: document.getElementById('m-date').value,
+                r_time: document.getElementById('m-time').value, model: document.getElementById('m-model').value,
+                km: document.getElementById('m-km').value, desc: document.getElementById('m-desc').value
             };
-            if(!data.carNo) return alert("차량 번호를 입력하세요.");
-
+            if(!data.carNo) return alert("NO NUMBER");
             if(id) db.ref('repairs/' + id).update(data).then(() => closeModal());
-            else {
-                data.bay = "0"; data.status = "대기중";
-                db.ref('repairs').push(data).then(() => closeModal());
-            }
+            else { data.bay = "0"; db.ref('repairs').push(data).then(() => closeModal()); }
         }
 
-        function deleteData() {
-            if(confirm("정말로 삭제하시겠습니까?")) {
-                db.ref('repairs/' + document.getElementById('target-id').value).remove().then(() => closeModal());
-            }
+        function deleteData() { if(confirm("DELETE?")) db.ref('repairs/' + document.getElementById('m-id').value).remove().then(() => closeModal()); }
+        function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
+        function showTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + id).classList.add('active');
+            if(id === 'res') setTimeout(() => calendar.updateSize(), 200);
         }
-
+        function toggleResMode(m) {
+            document.getElementById('cal-view').style.display = m === 'cal' ? 'block' : 'none';
+            document.getElementById('list-view').style.display = m === 'list' ? 'block' : 'none';
+            document.getElementById('btn-cal').className = m === 'cal' ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
+            document.getElementById('btn-list').className = m === 'list' ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
+            if(m === 'cal') calendar.render();
+        }
         function initCalendar() {
             calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView: 'dayGridMonth', locale: 'ko', height: '100%',
@@ -242,16 +238,6 @@
             });
             calendar.render();
         }
-
-        function showTab(id) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + id).classList.add('active');
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-' + id).classList.add('active');
-            if(id === 'res') setTimeout(() => calendar.updateSize(), 200);
-        }
-
-        function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
     </script>
 </body>
 </html>
