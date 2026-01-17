@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - 하이엔드 관제 시스템 V3.4</title>
+    <title>LK MOTORS - 통합 관제 시스템 V3.5</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,6 +17,7 @@
         .bg-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
         .dr-zone { min-height: 160px; border: 2px dashed #334155; border-radius: 24px; padding: 10px; transition: 0.3s; }
         .car-card { cursor: grab; background: #334155; padding: 12px; border-radius: 16px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        .car-card:active { cursor: grabbing; }
         .tab-btn.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; }
         .tab-content { display: none; width: 100%; height: 100%; }
         .tab-content.active { display: flex; flex-direction: column; }
@@ -32,7 +33,7 @@
         <div class="bg-slate-900 p-12 rounded-[40px] shadow-2xl w-full max-w-sm text-center border border-white/5">
             <h1 class="text-3xl font-black italic text-blue-500 mb-8 uppercase">LK MOTORS</h1>
             <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center text-white font-bold outline-none border border-transparent focus:border-blue-500">
-            <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-black">LOGIN</button>
+            <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-black">접속하기</button>
         </div>
     </div>
 
@@ -41,7 +42,7 @@
             <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black italic text-sm">작업 현황판</button>
             <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black italic text-sm">예약 관리</button>
         </div>
-        <button onclick="openEditModal(null)" class="bg-blue-600 px-6 py-2 rounded-xl font-black text-xs text-white shadow-lg">신규 예약 등록</button>
+        <button onclick="openEditModal(null)" class="bg-blue-600 px-6 py-2 rounded-xl font-black text-xs text-white">신규 예약 등록</button>
     </nav>
 
     <main id="tab-status" class="tab-content active p-4 gap-4">
@@ -56,7 +57,7 @@
                 <div id="tomorrow-zone" class="flex-1 overflow-y-auto custom-scroll"></div>
             </div>
             <div class="bg-card rounded-[30px] p-5 flex flex-col border-t-4 border-amber-500">
-                <h3 class="text-amber-500 font-black text-xs mb-4 uppercase italic border-b border-white/5 pb-2">기타/대기차량</h3>
+                <h3 class="text-amber-500 font-black text-xs mb-4 uppercase italic border-b border-white/5 pb-2">기타 대기차량</h3>
                 <div id="other-zone" class="flex-1 overflow-y-auto custom-scroll"></div>
             </div>
             <div class="bg-card rounded-[30px] p-5 flex flex-col border-l-4 border-emerald-500">
@@ -66,9 +67,9 @@
         </section>
     </main>
 
-    <main id="tab-res" class="tab-content p-6 gap-4 overflow-hidden">
-        <div class="flex gap-2">
-            <button onclick="toggleResMode('cal')" id="btn-cal" class="bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold">캘린더 모드</button>
+    <main id="tab-res" class="tab-content p-6 overflow-hidden">
+        <div class="flex gap-2 mb-4">
+            <button onclick="toggleResMode('cal')" id="btn-cal" class="bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold shadow-lg">캘린더 모드</button>
             <button onclick="toggleResMode('list')" id="btn-list" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold">리스트 모드</button>
         </div>
         <div id="cal-view" class="flex-1 bg-slate-900 rounded-[30px] p-6 shadow-2xl overflow-hidden"><div id='calendar'></div></div>
@@ -79,7 +80,7 @@
 
     <div id="edit-modal" class="fixed inset-0 bg-black/90 z-[4000] hidden items-center justify-center p-4 backdrop-blur-xl">
         <div class="bg-slate-900 w-full max-w-2xl rounded-[50px] shadow-2xl border border-white/10 overflow-hidden p-10">
-            <h2 class="text-2xl font-black italic text-blue-500 mb-8 uppercase" id="m-title">Edit Vehicle</h2>
+            <h2 class="text-2xl font-black italic text-blue-500 mb-8 uppercase" id="m-title">Edit Reservation</h2>
             <input type="hidden" id="m-id">
             <div class="grid grid-cols-2 gap-6">
                 <div class="space-y-4">
@@ -100,7 +101,7 @@
                 <button onclick="closeModal()" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">취소</button>
                 <button onclick="saveData()" class="flex-[2] py-4 bg-blue-600 rounded-2xl font-black">저장 하기</button>
             </div>
-            <button id="del-btn" onclick="deleteData()" class="w-full mt-4 text-[10px] text-red-500 font-bold opacity-30 hover:opacity-100 uppercase italic underline">Delete Vehicle Record</button>
+            <button id="del-btn" onclick="deleteData()" class="w-full mt-4 text-[10px] text-red-500 font-bold opacity-30 hover:opacity-100 uppercase italic">Delete Record</button>
         </div>
     </div>
 
@@ -139,7 +140,12 @@
         function initDraggable() {
             document.querySelectorAll('.dr-zone').forEach(el => {
                 new Sortable(el, { group: 'vehicles', animation: 150, onEnd: (evt) => {
-                    db.ref('repairs/' + evt.item.getAttribute('data-id')).update({ bay: evt.to.getAttribute('data-bay') });
+                    const id = evt.item.getAttribute('data-id');
+                    const bay = evt.to.getAttribute('data-bay');
+                    let status = "정비중";
+                    if(bay == "0") status = "수리대기";
+                    if(bay == "99") status = "출고완료";
+                    db.ref('repairs/' + id).update({ bay: bay, status: status });
                 }});
             });
         }
@@ -185,7 +191,7 @@
 
         function openEditModal(id) {
             document.getElementById('m-id').value = id || "";
-            document.getElementById('m-title').innerText = id ? "Edit Vehicle Data" : "New Registration";
+            document.getElementById('m-title').innerText = id ? "Edit Reservation" : "New Registration";
             document.getElementById('del-btn').style.display = id ? "block" : "none";
             if(id) {
                 db.ref('repairs/' + id).once('value', s => {
@@ -209,12 +215,12 @@
                 r_time: document.getElementById('m-time').value, model: document.getElementById('m-model').value,
                 km: document.getElementById('m-km').value, desc: document.getElementById('m-desc').value
             };
-            if(!data.carNo) return alert("번호를 입력하세요.");
+            if(!data.carNo) return alert("NO NUMBER");
             if(id) db.ref('repairs/' + id).update(data).then(() => closeModal());
             else { data.bay = "0"; db.ref('repairs').push(data).then(() => closeModal()); }
         }
 
-        function deleteData() { if(confirm("삭제하시겠습니까?")) db.ref('repairs/' + document.getElementById('m-id').value).remove().then(() => closeModal()); }
+        function deleteData() { if(confirm("DELETE?")) db.ref('repairs/' + document.getElementById('m-id').value).remove().then(() => closeModal()); }
         function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
         
         function showTab(id) {
@@ -224,15 +230,13 @@
             document.getElementById('btn-' + id).classList.add('active');
             if(id === 'res') setTimeout(() => calendar.updateSize(), 200);
         }
-
         function toggleResMode(m) {
             document.getElementById('cal-view').style.display = m === 'cal' ? 'block' : 'none';
             document.getElementById('list-view').style.display = m === 'list' ? 'block' : 'none';
-            document.getElementById('btn-cal').className = m === 'cal' ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold shadow-lg' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
-            document.getElementById('btn-list').className = m === 'list' ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold shadow-lg' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
+            document.getElementById('btn-cal').className = m === 'cal' ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
+            document.getElementById('btn-list').className = m === 'list' ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
             if(m === 'cal') calendar.render();
         }
-
         function initCalendar() {
             calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView: 'dayGridMonth', locale: 'ko', height: '100%',
