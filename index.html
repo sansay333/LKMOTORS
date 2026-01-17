@@ -30,13 +30,11 @@
         .car-card { cursor: pointer; background: #334155; padding: 12px; border-radius: 14px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 6px rgba(0,0,0,0.3); touch-action: none; position: relative; z-index: 50; transition: transform 0.1s, background 0.2s; }
         .car-card:active { transform: scale(0.96); background: #475569; }
         
-        /* 탭 및 메뉴 */
         .tab-btn { transition: all 0.3s; border-bottom: 3px solid transparent; color: #64748b; font-weight: 700; }
         .tab-btn.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; font-weight: 900; }
         .tab-content { display: none; width: 100%; height: calc(100vh - 56px); }
         .tab-content.active { display: flex; flex-direction: column; }
         
-        /* [V8.1 수정] 입력창 시인성 및 고대비 배경 */
         .input-group label { display: block; font-size: 12px; font-weight: 900; color: #94a3b8; margin-bottom: 5px; text-transform: uppercase; }
         .input-group input, .input-group textarea, .input-group select { 
             width: 100%; background: #0f172a; border: 1px solid #475569; border-radius: 10px; padding: 12px; 
@@ -47,19 +45,16 @@
         /* 예약일자/시간 전용 고대비 배경 (사장님 요청) */
         #m-date, #m-time, #c-first-date, #m-mechanic { color: #ffffff !important; background: #1e40af !important; border: 2px solid #3b82f6 !important; }
         
-        /* 히스토리 및 리스트 스타일 */
         .history-item { position: relative; background: rgba(15, 23, 42, 0.6); border-left: 4px solid #3b82f6; border-radius: 8px; padding: 12px; margin-bottom: 10px; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .delete-history-btn { position: absolute; top: 10px; right: 12px; color: #ef4444; font-weight: bold; cursor: pointer; padding: 2px 6px; z-index: 5; }
         
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         
-        /* 캘린더 모바일 전용 UI */
         .fc { background: #1e293b; color: #fff; border-radius: 24px; padding: 15px; border: none !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
         .fc-toolbar-title { font-weight: 900 !important; color: #3b82f6 !important; font-size: 1.2rem !important; }
         .fc-button { background: #334155 !important; border: none !important; font-weight: 900 !important; text-transform: uppercase !important; }
         
-        /* 화면 분리용 버튼 */
         .mode-btn { background: #1e293b; border: 1px solid #334155; padding: 12px; border-radius: 15px; font-weight: 900; transition: all 0.3s; color: #64748b; }
         .mode-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59,130,246,0.4); }
     </style>
@@ -158,7 +153,7 @@
             <input type="hidden" id="m-id">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mt-8">
                 <div class="space-y-6">
-                    <div class="input-group"><label>차량 번호 (4자리 조회)</label><input type="text" id="m-car" oninput="fetchInfo(this.value, 'm')" class="uppercase font-black text-blue-400 text-3xl" placeholder="번호 또는 이름"></div>
+                    <div class="input-group"><label>차량 번호 (4자리 또는 이름 조회)</label><input type="text" id="m-car" oninput="fetchInfo(this.value, 'm')" class="uppercase font-black text-blue-400 text-3xl" placeholder="번호 또는 이름"></div>
                     <div class="input-group"><label>차주 성함 / 연락처</label><div class="flex gap-3"><input type="text" id="m-name" class="w-1/2" placeholder="성함"><input type="text" id="m-phone" class="w-1/2" placeholder="연락처"></div></div>
                     <div class="input-group"><label>차대번호 (VIN 17자리)</label><input type="text" id="m-vin" class="font-mono text-xs uppercase" placeholder="WDB..."></div>
                     <div class="input-group"><label>차량 최초 등록일</label><input type="date" id="m-first-date"></div>
@@ -245,7 +240,6 @@
                 const todayStr = now.toISOString().split('T')[0];
                 const tomStr = new Date(now.getTime() + 86400000).toISOString().split('T')[0];
 
-                // [정밀 정렬] 날짜와 시간을 합쳐 정확한 최신순으로 정렬
                 const sortedRepairs = Object.entries(data).sort((a, b) => {
                     const dtA = new Date(a[1].date + ' ' + (a[1].r_time || '00:00'));
                     const dtB = new Date(b[1].date + ' ' + (b[1].r_time || '00:00'));
@@ -253,7 +247,6 @@
                 });
 
                 sortedRepairs.forEach(([id, car]) => {
-                    // 모바일 클릭 및 터치 반응을 위해 event.stopPropagation 적용
                     const carCardHtml = `<div class="car-card shadow-lg active:scale-95 transition-all" onclick="event.stopPropagation(); openEditModal('${id}')"><div class="flex justify-between items-center"><span class="text-blue-400 font-black text-[13px] block">${car.carNo}</span><span class="text-[9px] text-slate-400 font-bold">${car.model || ''}</span></div></div>`;
                     
                     listBody.innerHTML += `<tr class="border-b border-white/5 hover:bg-slate-800 transition-colors" onclick="openEditModal('${id}')"><td class="py-5 px-3"><span>${car.date}</span><br><span class="text-blue-500 font-black text-[9px]">${car.r_time||''}</span></td><td class="text-blue-400 font-black text-[14px]">${car.carNo}</td><td><span class="text-white text-[13px]">${car.name}</span><br><span class="text-amber-500 text-[10px] font-bold">${car.phone||'-'}</span></td><td class="hidden md:table-cell text-slate-400 text-[11px]">${car.model||'-'}</td><td class="text-[10px] opacity-60 leading-snug max-w-[200px] truncate">${car.desc||'-'}</td></tr>`;
@@ -278,16 +271,16 @@
             });
         }
 
-        // [핵심 엔진 3] 지능형 조회 & 신규 등록 연동 & 초기화
+        // [핵심 엔진 3] 신규 등록 시에도 4자리/이름 통합 조회 & 초기화
         function fetchInfo(searchValue, prefix) {
             const search = searchValue.toUpperCase();
-            // 숫자 2자리 이하인 경우 무조건 화면 리셋 (다른 숫자 입력 시에도 작동)
             if (searchValue.length < 3) { clearInfoFields(prefix); return; }
 
             db.ref('customers').once('value', s => {
                 let found = false;
                 s.forEach(child => {
                     const d = child.val();
+                    // 검색 조건: 끝 4자리 일치 OR 이름에 입력값 포함
                     const isCarMatch = (search.length >= 4 && d.carNo && d.carNo.endsWith(search));
                     const isNameMatch = (isNaN(search) && d.name && d.name.includes(search));
 
@@ -301,7 +294,6 @@
                         found = true; return true;
                     }
                 });
-                // 검색 결과 없거나 다른 번호면 즉시 초기화
                 if (!found) clearInfoFields(prefix);
             });
         }
@@ -337,7 +329,6 @@
             if(mode === 'cal') calendar.updateSize();
         }
 
-        // 데이터 이관 정밀 로직 (V8.1 마스터 고정)
         async function processCSV() {
             const fileInput = document.getElementById('csv-file');
             const status = document.getElementById('upload-status');
@@ -366,7 +357,6 @@
             reader.readAsText(fileInput.files[0], 'EUC-KR');
         }
 
-        // 원본 유지 필수 루틴들
         function saveData() { 
             const id = document.getElementById('m-id').value;
             const data = { carNo: document.getElementById('m-car').value.toUpperCase(), name: document.getElementById('m-name').value, phone: document.getElementById('m-phone').value, mechanic: document.getElementById('m-mechanic').value, date: document.getElementById('m-date').value, r_time: document.getElementById('m-time').value, model: document.getElementById('m-model').value, desc: document.getElementById('m-desc').value, vin: document.getElementById('m-vin').value.toUpperCase(), firstDate: document.getElementById('m-first-date').value };
@@ -448,7 +438,7 @@
                         grid.innerHTML += `
                             <div class="bg-card p-6 rounded-[35px] border border-white/5 relative active:scale-95 shadow-xl" onclick="openCustomerModal('${c.key}')">
                                 <input type="checkbox" value="${c.key}" onclick="event.stopPropagation()" class="cust-chk db-checkbox absolute top-5 right-5">
-                                <p class="text-amber-500 font-black text-xl">${d.carNo}</p>
+                                <p class="text-amber-500 font-black text-xl uppercase">${d.carNo}</p>
                                 <p class="text-xs text-white font-bold opacity-80">${d.name} | ${d.model||'-'}</p>
                             </div>`;
                     }
@@ -474,13 +464,13 @@
 
         function deleteRecord(path, idField) { 
             const id = document.getElementById(idField).value; 
-            if(id && confirm("삭제 후에는 복구가 불가능합니다. 계속할까요?")) db.ref(path+'/'+id).remove().then(() => closeModal(idField==='m-id'?'edit-modal':'c-modal')); 
+            if(id && confirm("삭제하시겠습니까?")) db.ref(path+'/'+id).remove().then(() => closeModal(idField==='m-id'?'edit-modal':'c-modal')); 
         }
 
         function deleteHistoryItem(cId, hId) { if(confirm("히스토리를 삭제하시겠습니까?")) db.ref(`customers/${cId}/history/${hId}`).remove().then(() => loadHistoryIntoModal(document.getElementById('m-car').value)); }
         function deleteSelectedCustomers() {
             const sel = Array.from(document.querySelectorAll('.cust-chk:checked')).map(cb => cb.value);
-            if(sel.length && confirm("선택된 고객 정보를 일괄 삭제할까요?")) { sel.forEach(id => db.ref('customers/'+id).remove()); syncCustomerDB(""); }
+            if(sel.length && confirm("일괄 삭제하시겠습니까?")) { sel.forEach(id => db.ref('customers/'+id).remove()); syncCustomerDB(""); }
         }
 
         let selectAll = false;
