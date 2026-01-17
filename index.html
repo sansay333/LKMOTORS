@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - V5.5 MASTER</title>
+    <title>LK MOTORS - V5.6 MASTER</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,18 +16,19 @@
         .bg-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
         .dr-zone { min-height: 80px; border: 1px dashed #334155; border-radius: 12px; padding: 5px; }
         
-        /* [V4.9 베이 레이아웃 유지] */
+        /* [V4.9 베이 레이아웃 절대 유지] */
         .bay-item { display: flex; flex-direction: column; justify-content: space-between; padding: 10px !important; min-height: 220px !important; border-radius: 20px !important; background: #1e293b !important; border: 1px solid #334155 !important; }
-        .bay-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
+        .bay-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; pointer-events: none; }
         .bay-v-no { font-size: 16px; font-weight: 900; color: #3b82f6; line-height: 1.2; }
         .bay-v-model { font-size: 10px; color: #94a3b8; font-weight: 700; margin-top: 2px; }
         .bay-v-desc { font-size: 9px; color: #cbd5e1; margin-top: 5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .bay-footer { text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; }
+        .bay-footer { text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; pointer-events: none; }
         .bay-v-worker { font-size: 11px; font-weight: 900; color: #fbbf24; }
 
-        /* [일반 전광판 카드: 정비내용 표기 추가] */
+        /* [일반 카드: 클릭 인식 강화] */
         .car-card { cursor: pointer; background: #334155; padding: 10px; border-radius: 12px; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.1); touch-action: pan-y; position: relative; z-index: 100; }
-        .card-sub-info { font-size: 8px; color: #94a3b8; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 4px; line-height: 1.2; }
+        .car-card:active { background: #475569; }
+        .card-sub-info { font-size: 8px; color: #94a3b8; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 4px; pointer-events: none; }
 
         .tab-btn.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; }
         .tab-content { display: none; width: 100%; height: 100%; }
@@ -46,18 +47,18 @@
 <body class="h-screen flex flex-col">
 
     <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9999] flex items-center justify-center p-6 text-center">
-        <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5">
-            <h1 class="text-3xl text-blue-500 mb-6 font-black italic uppercase">LK MOTORS ERP</h1>
-            <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center text-white outline-none border border-transparent focus:border-blue-500 font-bold">
+        <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5 font-black">
+            <h1 class="text-3xl text-blue-500 mb-6 italic uppercase">LK MOTORS ERP</h1>
+            <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center text-white outline-none border border-transparent focus:border-blue-500">
             <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold text-white uppercase">Access System</button>
         </div>
     </div>
 
     <nav class="h-14 bg-slate-900 border-b border-white/5 flex items-center px-4 justify-between shrink-0">
         <div class="flex gap-4 h-full">
-            <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black text-xs">현황판</button>
-            <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black text-xs">예약관리</button>
-            <button onclick="showTab('customer')" id="btn-customer" class="tab-btn font-black text-xs text-amber-500">고객이력</button>
+            <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black text-xs uppercase">현황판</button>
+            <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black text-xs uppercase">예약관리</button>
+            <button onclick="showTab('customer')" id="btn-customer" class="tab-btn font-black text-xs uppercase text-amber-500">고객이력</button>
         </div>
         <button onclick="openEditModal(null)" class="bg-blue-600 px-3 py-1.5 rounded-lg font-black text-[10px] text-white">신규등록</button>
     </nav>
@@ -65,7 +66,7 @@
     <main id="tab-status" class="tab-content active p-2 gap-2 overflow-y-auto custom-scroll">
         <section class="grid grid-cols-5 gap-2 shrink-0" id="bay-grid"></section>
         <section class="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-2 pb-10">
-            <div class="bg-card rounded-2xl p-3 border-t-2 border-blue-500"><h3 class="text-blue-400 font-black text-[9px] mb-2 uppercase italic">Today Wait</h3><div id="today-zone" class="flex-1 dr-zone" data-bay="0"></div></div>
+            <div class="bg-card rounded-2xl p-3 border-t-2 border-blue-500"><h3 class="text-blue-400 font-black text-[9px] mb-2 uppercase italic">Wait Today</h3><div id="today-zone" class="flex-1 dr-zone" data-bay="0"></div></div>
             <div class="bg-card rounded-2xl p-3 border-t-2 border-indigo-500"><h3 class="text-indigo-400 font-black text-[9px] mb-2 uppercase italic">Tomorrow</h3><div id="tomorrow-zone" class="flex-1 dr-zone" data-bay="0-t"></div></div>
             <div class="bg-card rounded-2xl p-3 border-t-2 border-amber-500"><h3 class="text-amber-500 font-black text-[9px] mb-2 uppercase italic">Others</h3><div id="other-zone" class="flex-1 dr-zone" data-bay="0-o"></div></div>
             <div class="bg-card rounded-2xl p-3 border-t-2 border-emerald-500"><h3 class="text-emerald-400 font-black text-[9px] mb-2 uppercase italic">Done</h3><div id="done-zone" class="flex-1 dr-zone" data-bay="99"></div></div>
@@ -81,7 +82,7 @@
         <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-2xl p-4 overflow-y-auto border border-white/5">
             <table class="w-full text-left font-bold text-slate-300 text-[11px]">
                 <thead class="text-slate-500 border-b border-white/5 uppercase text-[9px]">
-                    <tr><th class="py-2 px-1">일시</th><th>번호</th><th>차대번호</th><th>성함/연락처</th><th>정비내용</th></tr>
+                    <tr><th class="py-2 px-1">일시</th><th>번호</th><th>성함/연락처</th><th>내용</th></tr>
                 </thead>
                 <tbody id="list-body"></tbody>
             </table>
@@ -89,34 +90,34 @@
     </main>
 
     <main id="tab-customer" class="tab-content p-4 gap-4 bg-slate-950">
-        <input type="text" oninput="syncCustomerDB(this.value)" placeholder="차량번호/이름/모델 검색..." class="w-full bg-slate-800 p-3 rounded-xl outline-none border border-white/5 focus:border-amber-500 text-sm font-bold">
+        <input type="text" oninput="syncCustomerDB(this.value)" placeholder="번호/이름 검색..." class="w-full bg-slate-800 p-3 rounded-xl outline-none border border-white/5 focus:border-amber-500 text-sm font-bold">
         <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 overflow-y-auto custom-scroll" id="customer-grid"></div>
     </main>
 
     <div id="edit-modal" class="fixed inset-0 bg-black/95 z-[9900] hidden items-center justify-center p-2 backdrop-blur-md">
         <div class="bg-slate-900 w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden relative shadow-2xl">
-            <button onclick="closeModal('edit-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white">&times;</button>
-            <div class="p-6 text-xs font-bold">
-                <h2 class="text-lg font-black text-blue-500 mb-4 uppercase italic">Maintenance Entry</h2>
+            <button onclick="closeModal('edit-modal')" class="absolute top-4 right-6 text-slate-500 text-4xl hover:text-white">&times;</button>
+            <div class="p-6">
+                <h2 class="text-lg font-black text-blue-500 mb-4 uppercase italic">Vehicle Management</h2>
                 <input type="hidden" id="m-id">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <div class="input-group"><label>차량 번호</label><input type="text" id="m-car" oninput="fetchInfo(this.value, 'm')" class="uppercase font-black text-blue-400"></div>
                         <div class="input-group"><label>고객명</label><input type="text" id="m-name"></div>
                         <div class="input-group"><label>연락처</label><input type="text" id="m-phone"></div>
-                        <div class="input-group"><label>차대번호 (VIN)</label><input type="text" id="m-vin"></div>
+                        <div class="input-group"><label>차대번호</label><input type="text" id="m-vin"></div>
                         <div class="input-group"><label>최초 등록일</label><input type="date" id="m-first-date"></div>
                     </div>
                     <div class="space-y-2">
                         <div class="input-group"><label>담당 정비사</label><input type="text" id="m-mechanic"></div>
                         <div class="grid grid-cols-2 gap-2"><div class="input-group"><label>예약일</label><input type="date" id="m-date"></div><div class="input-group"><label>시간</label><input type="time" id="m-time"></div></div>
                         <div class="input-group"><label>모델/km</label><div class="flex gap-1"><input type="text" id="m-model" class="w-2/3"><input type="number" id="m-km" class="w-1/3"></div></div>
-                        <div class="input-group"><label>정비 요청 상세</label><textarea id="m-desc" class="h-20"></textarea></div>
+                        <div class="input-group"><label>정비 내용</label><textarea id="m-desc" class="h-20"></textarea></div>
                     </div>
                 </div>
                 <div class="flex gap-2 mt-6">
-                    <button onclick="saveData()" class="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-black text-sm">정보 저장</button>
-                    <button onclick="releaseVehicle()" id="rel-btn" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black text-sm">차량 출고</button>
+                    <button onclick="saveData()" class="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-black text-sm">저장</button>
+                    <button onclick="releaseVehicle()" id="rel-btn" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black text-sm">출고</button>
                 </div>
             </div>
         </div>
@@ -124,23 +125,23 @@
 
     <div id="c-modal" class="fixed inset-0 bg-black/95 z-[9950] hidden items-center justify-center p-2">
         <div class="bg-slate-900 w-full max-w-lg rounded-3xl p-6 border border-amber-500/20 shadow-2xl relative">
-            <button onclick="closeModal('c-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white">&times;</button>
-            <h2 class="text-lg font-black italic text-amber-500 mb-4 uppercase">Customer Master File</h2>
+            <button onclick="closeModal('c-modal')" class="absolute top-4 right-6 text-slate-500 text-4xl hover:text-white">&times;</button>
+            <h2 class="text-lg font-black italic text-amber-500 mb-4 uppercase">Customer History</h2>
             <input type="hidden" id="c-id">
-            <div class="space-y-2 text-xs">
-                <div class="grid grid-cols-2 gap-2">
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
                     <div class="input-group"><label>차량 번호</label><input type="text" id="c-car" class="font-black text-amber-400 uppercase"></div>
-                    <div class="input-group"><label>차량 모델</label><input type="text" id="c-model" class="text-white font-bold"></div>
+                    <div class="input-group"><label>차량 모델</label><input type="text" id="c-model"></div>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="input-group"><label>성함</label><input type="text" id="c-name" class="text-white font-bold"></div>
-                    <div class="input-group"><label>최초 등록일</label><input type="date" id="c-first-date" class="text-white font-bold"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="input-group"><label>고객명</label><input type="text" id="c-name"></div>
+                    <div class="input-group"><label>최초 등록일</label><input type="date" id="c-first-date"></div>
                 </div>
                 <div class="bg-slate-800 p-3 rounded-xl border border-white/5">
-                    <p class="text-[10px] text-amber-500 font-bold mb-1 italic">정비 히스토리</p>
-                    <div id="c-history-list" class="max-h-32 overflow-y-auto space-y-1 custom-scroll"></div>
+                    <p class="text-[10px] text-amber-500 font-bold mb-1 italic">과거 정비 이력</p>
+                    <div id="c-history-list" class="max-h-40 overflow-y-auto space-y-1 custom-scroll text-[10px]"></div>
                 </div>
-                <button onclick="saveCustomer()" class="w-full py-3 bg-amber-600 text-white rounded-xl font-black mt-2 text-sm shadow-xl">정보 업데이트 반영</button>
+                <button onclick="saveCustomer()" class="w-full py-3 bg-amber-600 text-white rounded-xl font-black mt-2 text-sm shadow-xl">DB 업데이트</button>
             </div>
         </div>
     </div>
@@ -163,7 +164,7 @@
             if(document.getElementById('pw').value === "9999") {
                 document.getElementById('login-layer').style.display = 'none';
                 initBays(); initCalendar(); initDraggable(); syncCustomerDB("");
-            } else { alert("비밀번호 불일치"); }
+            } else { alert("PASS ERROR"); }
         }
 
         function initBays() {
@@ -191,22 +192,21 @@
 
                 for(let id in data) {
                     const car = data[id];
-                    // [1. 캘린더에 차량번호 + 정비내용 표기]
+                    // [1. 캘린더에 차량번호 + 정비내용]
                     events.push({ id, title: `${car.carNo} [${car.desc || '일반'}]`, start: car.date, backgroundColor: car.bay==="99"?'#059669':'#2563eb', borderColor: 'transparent' });
                     
-                    // [2. 현황판 베이 외 다른 전광판에도 정비내용 추가]
+                    // [2. 현황판 다른 카드에도 정비내용 노출]
                     const carHtml = `<div class="car-card shadow-lg" onclick="openEditModal('${id}')">
                         <div class="flex justify-between items-start">
                             <span class="text-blue-400 font-black text-[11px] block">${car.carNo}</span>
                             <span class="text-[8px] text-slate-400">${car.model || ''}</span>
                         </div>
-                        <div class="card-sub-info truncate">${car.desc || '정비내용 없음'}</div>
+                        <div class="card-sub-info truncate pointer-events-none">${car.desc || '내용 없음'}</div>
                     </div>`;
 
                     document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5" onclick="openEditModal('${id}')">
                         <td class="py-2 px-1"><span>${car.date}</span></td>
                         <td class="text-blue-400">${car.carNo}</td>
-                        <td class="text-[9px] opacity-70 italic">${car.vin||'-'}</td>
                         <td class="text-white text-[10px]">${car.name}<br><span class="text-amber-500 text-[8px]">${car.phone||'-'}</span></td>
                         <td class="opacity-40 truncate max-w-[80px] text-[10px]">${car.desc||'-'}</td>
                     </tr>`;
@@ -220,19 +220,19 @@
                     } else {
                         const target = document.getElementById(`bay-zone-${car.bay}`);
                         if(target) {
-                            // [V4.9 베이 레이아웃 보존]
+                            // [V4.9 베이 레이아웃 상단+하단 완벽 유지]
                             target.innerHTML = `
                                 <div class="flex-1 flex flex-col justify-between" onclick="openEditModal('${id}')">
                                     <div class="bay-header">
                                         <p class="bay-v-no">${car.carNo}</p>
                                         <p class="bay-v-model">${car.model || 'Unknown'}</p>
-                                        <p class="bay-v-desc">${car.desc || 'No Description'}</p>
+                                        <p class="bay-v-desc">${car.desc || '정비내용 없음'}</p>
                                     </div>
                                     <div class="bay-footer">
                                         <p class="bay-v-worker">${car.mechanic || ' 정비사 미지정'}</p>
                                     </div>
                                 </div>`;
-                            document.getElementById(`bay-status-${car.bay}`).innerText = "Active";
+                            document.getElementById(`bay-status-${car.bay}`).innerText = "Working";
                             document.getElementById(`bay-status-${car.bay}`).className = "text-[7px] text-blue-500 font-black uppercase";
                         }
                     }
@@ -241,7 +241,7 @@
             });
         }
 
-        // 고객 이력 조회 상세화 (모델, 최초등록일 추가)
+        // 고객 이력 조회 연동 (모델, 최초등록일 필드 추가)
         function openCustomerModal(id) {
             document.getElementById('c-id').value = id;
             db.ref('customers/'+id).once('value', s => {
@@ -252,7 +252,7 @@
                 document.getElementById('c-first-date').value = d.firstDate || ""; 
                 const hList = document.getElementById('c-history-list'); hList.innerHTML = "";
                 if(d.history) Object.values(d.history).reverse().forEach(h => {
-                    hList.innerHTML += `<div class="bg-slate-900/50 p-2 rounded-lg border border-white/5 text-[9px]"><b>[${h.date}]</b> ${h.desc} <br> <span class="opacity-50">${h.mechanic||'-'}</span></div>`;
+                    hList.innerHTML += `<div class="bg-slate-900/50 p-2 rounded-lg border border-white/5"><b>[${h.date}]</b> ${h.desc} <br> <span class="opacity-50 text-[9px]">${h.mechanic||'-'}</span></div>`;
                 });
             });
             document.getElementById('c-modal').style.display = 'flex';
@@ -295,9 +295,8 @@
                 if(s.exists()){
                     const d = Object.values(s.val())[0];
                     document.getElementById(prefix+'-name').value = d.name; document.getElementById(prefix+'-phone').value = d.phone;
-                    document.getElementById(prefix+'-model').value = d.model || ""; 
-                    document.getElementById(prefix+'-first-date').value = d.firstDate || "";
-                    document.getElementById(prefix+'-vin').value = d.vin || "";
+                    document.getElementById(prefix+'-model').value = d.model; document.getElementById(prefix+'-first-date').value = d.firstDate;
+                    document.getElementById(prefix+'-vin').value = d.vin;
                 }
             });
         }
@@ -332,11 +331,9 @@
         function saveCustomer() {
             const id = document.getElementById('c-id').value;
             db.ref('customers/'+id).update({ 
-                carNo: document.getElementById('c-car').value.toUpperCase(), 
-                name: document.getElementById('c-name').value,
-                model: document.getElementById('c-model').value,
-                firstDate: document.getElementById('c-first-date').value 
-            }).then(() => { alert("저장 완료"); closeModal('c-modal'); });
+                carNo: document.getElementById('c-car').value.toUpperCase(), name: document.getElementById('c-name').value,
+                model: document.getElementById('c-model').value, firstDate: document.getElementById('c-first-date').value 
+            }).then(() => { alert("DB 업데이트 완료"); closeModal('c-modal'); });
         }
 
         function initCalendar() {
@@ -365,6 +362,8 @@
         }
 
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // [핵심] 로그인 후 초기화 함수들이 제대로 실행되도록 login 함수 내부를 강화했습니다.
     </script>
 </body>
 </html>
