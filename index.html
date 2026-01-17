@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - V4.6 (모바일 클릭 최적화)</title>
+    <title>LK MOTORS - V4.7 (상세 리스트 & 최초등록일)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,21 +15,8 @@
         body { font-family: 'Noto Sans KR', sans-serif; background: #0f172a; color: #f1f5f9; overflow: hidden; -webkit-tap-highlight-color: transparent; }
         .bg-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
         .dr-zone { min-height: 80px; border: 1px dashed #334155; border-radius: 12px; padding: 5px; }
-        
-        /* 모바일 터치 대응 핵심 스타일 */
-        .car-card { 
-            cursor: pointer; 
-            background: #334155; 
-            padding: 10px; 
-            border-radius: 12px; 
-            margin-bottom: 5px; 
-            border: 1px solid rgba(255,255,255,0.1); 
-            touch-action: pan-y; /* 드래그를 허용하면서도 터치 클릭 간섭 최소화 */
-            position: relative;
-            z-index: 100; /* 클릭 우선순위 상향 */
-        }
+        .car-card { cursor: pointer; background: #334155; padding: 10px; border-radius: 12px; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.1); touch-action: pan-y; position: relative; z-index: 100; }
         .car-card:active { background: #475569; }
-
         .tab-btn.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; }
         .tab-content { display: none; width: 100%; height: 100%; }
         .tab-content.active { display: flex; flex-direction: column; }
@@ -41,6 +28,8 @@
             .car-card { padding: 5px !important; }
             .car-card .c-no { font-size: 10px !important; }
             .car-card .c-info { font-size: 8px !important; }
+            #list-view { padding: 10px !important; }
+            .list-table th, .list-table td { font-size: 9px !important; padding: 4px 2px !important; }
         }
 
         .fc-event { cursor: pointer; font-size: 10px !important; border: none !important; padding: 1px 2px; }
@@ -52,7 +41,7 @@
 
     <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9999] flex items-center justify-center p-6 text-center">
         <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5 font-black italic">
-            <h1 class="text-3xl text-blue-500 mb-6 uppercase tracking-tighter">LK MOTORS ERP</h1>
+            <h1 class="text-3xl text-blue-500 mb-6 uppercase tracking-tighter">LK MOTORS ERP V4.7</h1>
             <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center text-white outline-none border border-transparent focus:border-blue-500 font-bold">
             <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold shadow-lg">ENTER</button>
         </div>
@@ -80,13 +69,13 @@
     <main id="tab-res" class="tab-content p-2 gap-2">
         <div class="flex gap-2 shrink-0">
             <button onclick="toggleResMode('cal')" id="btn-m-cal" class="bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold">캘린더</button>
-            <button onclick="toggleResMode('list')" id="btn-m-list" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold">리스트</button>
+            <button onclick="toggleResMode('list')" id="btn-m-list" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold">상세 리스트</button>
         </div>
         <div id="cal-view" class="flex-1 bg-slate-900 rounded-2xl p-2 border border-white/5 overflow-hidden"><div id='calendar' class="h-full"></div></div>
         <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-2xl p-4 overflow-y-auto border border-white/5 shadow-2xl">
-            <table class="w-full text-left text-[11px] font-bold text-slate-300">
+            <table class="w-full text-left list-table font-bold text-slate-300">
                 <thead class="text-slate-500 border-b border-white/5 uppercase">
-                    <tr><th class="py-2 px-1">날짜</th><th>차량번호</th><th>고객명</th><th>정비사</th></tr>
+                    <tr><th class="py-2 px-1">일시</th><th>번호</th><th>모델/고객</th><th>정비사</th><th>내용</th></tr>
                 </thead>
                 <tbody id="list-body"></tbody>
             </table>
@@ -109,12 +98,13 @@
                         <div class="input-group"><label>차량 번호</label><input type="text" id="m-car" oninput="fetchInfo(this.value, 'm')" class="uppercase font-black text-blue-400"></div>
                         <div class="input-group"><label>고객명</label><input type="text" id="m-name"></div>
                         <div class="input-group"><label>연락처</label><input type="text" id="m-phone"></div>
+                        <div class="input-group"><label>최초 등록일</label><input type="date" id="m-first-date" class="text-[12px]"></div>
                         <div class="input-group"><label>담당 정비사</label><input type="text" id="m-mechanic" placeholder="성함"></div>
                     </div>
                     <div class="space-y-3">
                         <div class="input-group"><label>날짜/시간</label><div class="flex gap-1"><input type="date" id="m-date" class="text-[10px] p-1"><input type="time" id="m-time" class="text-[10px] p-1"></div></div>
                         <div class="input-group"><label>모델/km</label><div class="flex gap-1"><input type="text" id="m-model" class="w-2/3"><input type="number" id="m-km" class="w-1/3 text-[10px]"></div></div>
-                        <div class="input-group"><label>정비 요청 상세</label><textarea id="m-desc" class="h-20 text-xs font-medium"></textarea></div>
+                        <div class="input-group"><label>정비 요청 상세</label><textarea id="m-desc" class="h-24 text-xs font-medium"></textarea></div>
                     </div>
                 </div>
                 <div class="flex gap-2 mt-6">
@@ -134,6 +124,7 @@
             <div class="space-y-3">
                 <div class="input-group"><label>차량 번호</label><input type="text" id="c-car" class="font-black text-amber-400"></div>
                 <div class="grid grid-cols-2 gap-2"><div class="input-group"><label>이름</label><input type="text" id="c-name"></div><div class="input-group"><label>연락처</label><input type="text" id="c-phone"></div></div>
+                <div class="input-group"><label>최초 등록일</label><input type="date" id="c-first-date" class="bg-slate-800 border-none text-amber-200"></div>
                 <div class="bg-slate-800 p-3 rounded-xl border border-white/5 shadow-inner">
                     <p class="text-[10px] text-amber-500 font-bold mb-2 italic border-b border-white/5 pb-1">과거 정비 및 담당자 이력</p>
                     <div id="c-history-list" class="max-h-40 overflow-y-auto text-[10px] space-y-2 custom-scroll"></div>
@@ -164,17 +155,6 @@
             } else { alert("PASS ERROR"); }
         }
 
-        function initBays() {
-            const grid = document.getElementById('bay-grid'); grid.innerHTML = "";
-            for(let i=1; i<=5; i++) {
-                grid.innerHTML += `<div class="bay-item bg-card rounded-xl p-1.5 flex flex-col gap-1 relative min-h-[100px] border border-white/5">
-                    <span class="text-[7px] font-black text-slate-600 uppercase italic">BAY ${i}</span>
-                    <div id="bay-zone-${i}" class="dr-zone flex-1 flex flex-col pt-1" data-bay="${i}"></div>
-                </div>`;
-            }
-            startSync();
-        }
-
         function startSync() {
             db.ref('repairs').on('value', (s) => {
                 const data = s.val();
@@ -193,7 +173,14 @@
                         <p class="text-[8px] text-slate-300 truncate c-info">${car.name} | ${car.mechanic || '미정'}</p>
                     </div>`;
 
-                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5" onclick="openEditModal('${id}')"><td class="py-2 px-1">${car.date}</td><td>${car.carNo}</td><td>${car.name}</td><td>${car.mechanic||'-'}</td></tr>`;
+                    // [리스트 모드 항목 강화]
+                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5" onclick="openEditModal('${id}')">
+                        <td class="py-3 px-1"><span>${car.date}</span><br><span class="opacity-50 text-[8px]">${car.r_time||''}</span></td>
+                        <td class="text-blue-400">${car.carNo}</td>
+                        <td><span>${car.model||'-'}</span><br><span class="opacity-50 text-[9px]">${car.name}</span></td>
+                        <td>${car.mechanic||'-'}</td>
+                        <td class="max-w-[100px] truncate opacity-40">${car.desc||'-'}</td>
+                    </tr>`;
 
                     if(car.bay == "0") {
                         if(car.date === todayStr) document.getElementById('today-zone').innerHTML += carHtml;
@@ -209,70 +196,37 @@
             });
         }
 
-        // [모바일 드래그 & 클릭 최적화 초기화]
-        function initDraggable() {
-            document.querySelectorAll('.dr-zone').forEach(el => {
-                new Sortable(el, { 
-                    group: 'vehicles', 
-                    animation: 200, 
-                    delay: 150, // 길게 눌러야 드래그 시작 (가벼운 터치는 클릭으로 인식)
-                    delayOnTouchOnly: true,
-                    onEnd: (evt) => {
-                        // 드래그 후 ID 추출 로직 개선 (정규식 사용)
-                        const attr = evt.item.getAttribute('onclick');
-                        const id = attr ? attr.match(/'([^']+)'/)[1] : null;
-                        if(!id) return;
-                        let bay = evt.to.getAttribute('data-bay');
-                        if(bay.includes('-')) bay = "0"; 
-                        db.ref('repairs/' + id).update({ bay });
-                    }
-                });
-            });
-        }
-
-        // V4.5 전문 기능 계승 (출고 및 고객 DB 연동)
-        function releaseVehicle() {
-            const id = document.getElementById('m-id').value;
-            db.ref('repairs/'+id).once('value', s => {
-                const d = s.val();
-                const historyItem = { date: d.date, desc: d.desc, km: d.km, mechanic: d.mechanic || '기록없음' };
-                db.ref('customers').orderByChild('carNo').equalTo(d.carNo).once('value', cs => {
-                    if(cs.exists()) db.ref('customers/'+Object.keys(cs.val())[0]+'/history').push(historyItem);
-                });
-                db.ref('repairs/'+id).remove().then(() => { alert("출고완료/이력저장"); closeModal('edit-modal'); });
-            });
-        }
-
         function saveData() {
             const id = document.getElementById('m-id').value;
             const data = {
                 carNo: document.getElementById('m-car').value.toUpperCase(), name: document.getElementById('m-name').value,
                 phone: document.getElementById('m-phone').value, mechanic: document.getElementById('m-mechanic').value,
                 date: document.getElementById('m-date').value, r_time: document.getElementById('m-time').value,
-                model: document.getElementById('m-model').value, km: document.getElementById('m-km').value, desc: document.getElementById('m-desc').value
+                model: document.getElementById('m-model').value, km: document.getElementById('m-km').value, 
+                desc: document.getElementById('m-desc').value, firstDate: document.getElementById('m-first-date').value
             };
             if(!data.carNo) return alert("NO NUMBER");
+            
             db.ref('customers').orderByChild('carNo').equalTo(data.carNo).once('value', s => {
-                const cData = { carNo: data.carNo, name: data.name, phone: data.phone, model: data.model };
-                if(!s.exists()) { cData.firstDate = data.date; db.ref('customers').push(cData); }
+                const cData = { carNo: data.carNo, name: data.name, phone: data.phone, model: data.model, firstDate: data.firstDate };
+                if(!s.exists()) { db.ref('customers').push(cData); }
                 else { db.ref('customers/'+Object.keys(s.val())[0]).update(cData); }
             });
+
             if(id) db.ref('repairs/'+id).update(data).then(() => closeModal('edit-modal'));
             else { data.bay = "0"; db.ref('repairs').push(data).then(() => closeModal('edit-modal')); }
         }
 
-        function syncCustomerDB(key) {
-            db.ref('customers').on('value', s => {
-                const grid = document.getElementById('customer-grid'); grid.innerHTML = "";
-                s.forEach(c => {
-                    const d = c.val();
-                    if(d.carNo.includes(key.toUpperCase()) || d.name.includes(key)) {
-                        grid.innerHTML += `<div class="bg-slate-800 p-4 rounded-2xl shadow-sm border border-white/5" onclick="openCustomerModal('${c.key}')">
-                            <p class="text-amber-500 font-black text-sm uppercase">${d.carNo}</p>
-                            <p class="text-[10px] text-slate-300 font-bold">${d.name}</p>
-                        </div>`;
-                    }
-                });
+        function fetchInfo(carNo, prefix) {
+            if(carNo.length < 4) return;
+            db.ref('customers').orderByChild('carNo').equalTo(carNo.toUpperCase()).once('value', s => {
+                if(s.exists()){
+                    const d = Object.values(s.val())[0];
+                    document.getElementById(prefix+'-name').value = d.name || "";
+                    document.getElementById(prefix+'-phone').value = d.phone || "";
+                    document.getElementById(prefix+'-model').value = d.model || "";
+                    document.getElementById(prefix+'-first-date').value = d.firstDate || "";
+                }
             });
         }
 
@@ -281,7 +235,7 @@
             db.ref('customers/'+id).once('value', s => {
                 const d = s.val();
                 document.getElementById('c-car').value = d.carNo; document.getElementById('c-name').value = d.name;
-                document.getElementById('c-phone').value = d.phone;
+                document.getElementById('c-phone').value = d.phone; document.getElementById('c-first-date').value = d.firstDate || "";
                 const hList = document.getElementById('c-history-list'); hList.innerHTML = "";
                 if(d.history) Object.values(d.history).reverse().forEach(h => {
                     hList.innerHTML += `<div class="bg-slate-900/50 p-2 rounded-lg border border-white/5">
@@ -293,15 +247,28 @@
             document.getElementById('c-modal').style.display = 'flex';
         }
 
-        // 공통 UI 핸들러
-        function initCalendar() {
-            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-                initialView:'dayGridMonth', locale:'ko', height:'100%',
-                headerToolbar:{left:'prev,next today', center:'title', right:'dayGridMonth'},
-                eventClick: (info) => openEditModal(info.event.id),
-                dayMaxEventRows: true
+        // 기존 V4.6 UI & 조작 로직 (변경없음)
+        function initBays() {
+            const grid = document.getElementById('bay-grid'); grid.innerHTML = "";
+            for(let i=1; i<=5; i++) {
+                grid.innerHTML += `<div class="bay-item bg-card rounded-xl p-1.5 flex flex-col gap-1 relative min-h-[100px] border border-white/5">
+                    <span class="text-[7px] font-black text-slate-600 uppercase italic">BAY ${i}</span>
+                    <div id="bay-zone-${i}" class="dr-zone flex-1 flex flex-col pt-1" data-bay="${i}"></div>
+                </div>`;
+            }
+            startSync();
+        }
+        function initDraggable() {
+            document.querySelectorAll('.dr-zone').forEach(el => {
+                new Sortable(el, { group: 'vehicles', animation: 200, delay: 150, delayOnTouchOnly: true, onEnd: (evt) => {
+                    const attr = evt.item.getAttribute('onclick');
+                    const id = attr ? attr.match(/'([^']+)'/)[1] : null;
+                    if(!id) return;
+                    let bay = evt.to.getAttribute('data-bay');
+                    if(bay.includes('-')) bay = "0"; 
+                    db.ref('repairs/' + id).update({ bay });
+                }});
             });
-            calendar.render();
         }
         function openEditModal(id) {
             document.getElementById('m-id').value = id || "";
@@ -313,10 +280,18 @@
                     document.getElementById('m-phone').value = d.phone; document.getElementById('m-mechanic').value = d.mechanic || "";
                     document.getElementById('m-date').value = d.date; document.getElementById('m-time').value = d.r_time;
                     document.getElementById('m-model').value = d.model; document.getElementById('m-km').value = d.km;
-                    document.getElementById('m-desc').value = d.desc;
+                    document.getElementById('m-desc').value = d.desc; document.getElementById('m-first-date').value = d.firstDate || "";
                 });
             } else { document.querySelectorAll('#edit-modal input, #edit-modal textarea').forEach(i => i.value = ""); }
             document.getElementById('edit-modal').style.display = 'flex';
+        }
+        function initCalendar() {
+            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                initialView:'dayGridMonth', locale:'ko', height:'100%',
+                headerToolbar:{left:'prev,next today', center:'title', right:'dayGridMonth'},
+                eventClick: (info) => openEditModal(info.event.id)
+            });
+            calendar.render();
         }
         function toggleResMode(m) {
             document.getElementById('cal-view').style.display = (m==='cal'?'block':'none');
@@ -332,22 +307,41 @@
             document.getElementById('btn-'+id).classList.add('active');
             if(id==='res' && calendar) setTimeout(() => calendar.updateSize(), 200);
         }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function fetchInfo(carNo, prefix) {
-            if(carNo.length < 4) return;
-            db.ref('customers').orderByChild('carNo').equalTo(carNo.toUpperCase()).once('value', s => {
-                if(s.exists()){
-                    const d = Object.values(s.val())[0];
-                    document.getElementById(prefix+'-name').value = d.name;
-                    document.getElementById(prefix+'-phone').value = d.phone;
-                    document.getElementById(prefix+'-model').value = d.model || "";
-                }
+        function syncCustomerDB(key) {
+            db.ref('customers').on('value', s => {
+                const grid = document.getElementById('customer-grid'); grid.innerHTML = "";
+                s.forEach(c => {
+                    const d = c.val();
+                    if(d.carNo.includes(key.toUpperCase()) || d.name.includes(key)) {
+                        grid.innerHTML += `<div class="bg-slate-800 p-4 rounded-2xl shadow-sm border border-white/5" onclick="openCustomerModal('${c.key}')">
+                            <p class="text-amber-500 font-black text-sm uppercase">${d.carNo}</p>
+                            <p class="text-[10px] text-slate-300 font-bold">${d.name}</p>
+                        </div>`;
+                    }
+                });
             });
         }
         function saveCustomer() {
             const id = document.getElementById('c-id').value;
-            db.ref('customers/'+id).update({ carNo: document.getElementById('c-car').value.toUpperCase(), name: document.getElementById('c-name').value, phone: document.getElementById('c-phone').value }).then(() => closeModal('c-modal'));
+            db.ref('customers/'+id).update({ 
+                carNo: document.getElementById('c-car').value.toUpperCase(), 
+                name: document.getElementById('c-name').value, 
+                phone: document.getElementById('c-phone').value,
+                firstDate: document.getElementById('c-first-date').value
+            }).then(() => closeModal('c-modal'));
         }
+        function releaseVehicle() {
+            const id = document.getElementById('m-id').value;
+            db.ref('repairs/'+id).once('value', s => {
+                const d = s.val();
+                const historyItem = { date: d.date, desc: d.desc, km: d.km, mechanic: d.mechanic || '기록없음' };
+                db.ref('customers').orderByChild('carNo').equalTo(d.carNo).once('value', cs => {
+                    if(cs.exists()) db.ref('customers/'+Object.keys(cs.val())[0]+'/history').push(historyItem);
+                });
+                db.ref('repairs/'+id).remove().then(() => { alert("출고완료/이력저장"); closeModal('edit-modal'); });
+            });
+        }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function deleteRecord(path, idInput) { if(confirm("DELETE?")) db.ref(path+'/'+document.getElementById(idInput).value).remove().then(() => closeModal('edit-modal')); }
     </script>
 </body>
