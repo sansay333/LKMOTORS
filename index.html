@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - 통합 관제 시스템 V3.3</title>
+    <title>LK MOTORS - 하이엔드 관제 시스템 V3.4</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -31,7 +31,7 @@
     <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[5000] flex items-center justify-center">
         <div class="bg-slate-900 p-12 rounded-[40px] shadow-2xl w-full max-w-sm text-center border border-white/5">
             <h1 class="text-3xl font-black italic text-blue-500 mb-8 uppercase">LK MOTORS</h1>
-            <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center text-white font-bold outline-none">
+            <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center text-white font-bold outline-none border border-transparent focus:border-blue-500">
             <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-black">LOGIN</button>
         </div>
     </div>
@@ -41,7 +41,7 @@
             <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black italic text-sm">작업 현황판</button>
             <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black italic text-sm">예약 관리</button>
         </div>
-        <button onclick="openEditModal(null)" class="bg-blue-600 px-6 py-2 rounded-xl font-black text-xs text-white">신규 예약 등록</button>
+        <button onclick="openEditModal(null)" class="bg-blue-600 px-6 py-2 rounded-xl font-black text-xs text-white shadow-lg">신규 예약 등록</button>
     </nav>
 
     <main id="tab-status" class="tab-content active p-4 gap-4">
@@ -56,7 +56,7 @@
                 <div id="tomorrow-zone" class="flex-1 overflow-y-auto custom-scroll"></div>
             </div>
             <div class="bg-card rounded-[30px] p-5 flex flex-col border-t-4 border-amber-500">
-                <h3 class="text-amber-500 font-black text-xs mb-4 uppercase italic border-b border-white/5 pb-2">기타 대기차량</h3>
+                <h3 class="text-amber-500 font-black text-xs mb-4 uppercase italic border-b border-white/5 pb-2">기타/대기차량</h3>
                 <div id="other-zone" class="flex-1 overflow-y-auto custom-scroll"></div>
             </div>
             <div class="bg-card rounded-[30px] p-5 flex flex-col border-l-4 border-emerald-500">
@@ -68,12 +68,12 @@
 
     <main id="tab-res" class="tab-content p-6 gap-4 overflow-hidden">
         <div class="flex gap-2">
-            <button onclick="toggleResMode('cal')" id="btn-cal" class="bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold">캘린더 보기</button>
-            <button onclick="toggleResMode('list')" id="btn-list" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold">리스트 보기</button>
+            <button onclick="toggleResMode('cal')" id="btn-cal" class="bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold">캘린더 모드</button>
+            <button onclick="toggleResMode('list')" id="btn-list" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold">리스트 모드</button>
         </div>
         <div id="cal-view" class="flex-1 bg-slate-900 rounded-[30px] p-6 shadow-2xl overflow-hidden"><div id='calendar'></div></div>
         <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-[30px] p-6 shadow-2xl overflow-y-auto custom-scroll">
-            <table class="w-full text-left text-xs"><thead class="text-slate-500 border-b border-white/5"><tr><th class="py-4">날짜</th><th>차량번호</th><th>고객명</th><th>내용</th></tr></thead><tbody id="list-body"></tbody></table>
+            <table class="w-full text-left text-xs"><thead class="text-slate-500 border-b border-white/5"><tr><th class="py-4 px-4">날짜</th><th>차량번호</th><th>고객명</th><th>모델</th><th>내용</th></tr></thead><tbody id="list-body"></tbody></table>
         </div>
     </main>
 
@@ -100,7 +100,7 @@
                 <button onclick="closeModal()" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">취소</button>
                 <button onclick="saveData()" class="flex-[2] py-4 bg-blue-600 rounded-2xl font-black">저장 하기</button>
             </div>
-            <button id="del-btn" onclick="deleteData()" class="w-full mt-4 text-[10px] text-red-500 font-bold opacity-30 hover:opacity-100 uppercase italic">Delete Record</button>
+            <button id="del-btn" onclick="deleteData()" class="w-full mt-4 text-[10px] text-red-500 font-bold opacity-30 hover:opacity-100 uppercase italic underline">Delete Vehicle Record</button>
         </div>
     </div>
 
@@ -165,7 +165,7 @@
                         <p class="text-[10px] font-bold text-slate-200">${car.name} <span class="opacity-30">| ${car.model || ''}</span></p>
                     </div>`;
 
-                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5 cursor-pointer hover:bg-white/5" onclick="openEditModal('${id}')"><td class="py-4">${car.date}</td><td>${car.carNo}</td><td>${car.name}</td><td class="opacity-50">${car.desc || '-'}</td></tr>`;
+                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5 cursor-pointer hover:bg-white/5" onclick="openEditModal('${id}')"><td class="py-4 px-4">${car.date}</td><td>${car.carNo}</td><td>${car.name}</td><td>${car.model || '-'}</td><td class="opacity-50">${car.desc || '-'}</td></tr>`;
 
                     if(car.bay == "0") {
                         if(car.date === todayStr) document.getElementById('today-zone').innerHTML += carHtml;
@@ -209,13 +209,14 @@
                 r_time: document.getElementById('m-time').value, model: document.getElementById('m-model').value,
                 km: document.getElementById('m-km').value, desc: document.getElementById('m-desc').value
             };
-            if(!data.carNo) return alert("NO NUMBER");
+            if(!data.carNo) return alert("번호를 입력하세요.");
             if(id) db.ref('repairs/' + id).update(data).then(() => closeModal());
             else { data.bay = "0"; db.ref('repairs').push(data).then(() => closeModal()); }
         }
 
-        function deleteData() { if(confirm("DELETE?")) db.ref('repairs/' + document.getElementById('m-id').value).remove().then(() => closeModal()); }
+        function deleteData() { if(confirm("삭제하시겠습니까?")) db.ref('repairs/' + document.getElementById('m-id').value).remove().then(() => closeModal()); }
         function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
+        
         function showTab(id) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + id).classList.add('active');
@@ -223,13 +224,15 @@
             document.getElementById('btn-' + id).classList.add('active');
             if(id === 'res') setTimeout(() => calendar.updateSize(), 200);
         }
+
         function toggleResMode(m) {
             document.getElementById('cal-view').style.display = m === 'cal' ? 'block' : 'none';
             document.getElementById('list-view').style.display = m === 'list' ? 'block' : 'none';
-            document.getElementById('btn-cal').className = m === 'cal' ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
-            document.getElementById('btn-list').className = m === 'list' ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
+            document.getElementById('btn-cal').className = m === 'cal' ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold shadow-lg' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
+            document.getElementById('btn-list').className = m === 'list' ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold shadow-lg' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
             if(m === 'cal') calendar.render();
         }
+
         function initCalendar() {
             calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView: 'dayGridMonth', locale: 'ko', height: '100%',
