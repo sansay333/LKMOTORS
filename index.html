@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - V7.1 MASTER</title>
+    <title>LK MOTORS - V7.2 OPTIMIZED</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,25 +15,20 @@
         body { font-family: 'Noto Sans KR', sans-serif; background: #0f172a; color: #f1f5f9; overflow: hidden; -webkit-tap-highlight-color: transparent; }
         .bg-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
         .dr-zone { min-height: 80px; border: 1px dashed #334155; border-radius: 12px; padding: 5px; }
-        /* V4.9 정통 베이 스타일 유지 */
         .bay-item { display: flex; flex-direction: column; justify-content: space-between; padding: 10px !important; min-height: 220px !important; border-radius: 20px !important; background: #1e293b !important; border: 1px solid #334155 !important; }
-        .bay-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; pointer-events: none; }
-        .bay-v-no { font-size: 16px; font-weight: 900; color: #3b82f6; line-height: 1.2; }
-        .bay-v-model { font-size: 10px; color: #94a3b8; font-weight: 700; margin-top: 2px; }
-        .bay-v-desc { font-size: 9px; color: #cbd5e1; margin-top: 5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .bay-footer { text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; pointer-events: none; }
-        .bay-v-worker { font-size: 11px; font-weight: 900; color: #fbbf24; }
+        .bay-v-no { font-size: 16px; font-weight: 900; color: #3b82f6; text-align: center; }
+        .bay-v-worker { font-size: 11px; font-weight: 900; color: #fbbf24; text-align: center; }
         .car-card { cursor: pointer; background: #334155; padding: 10px; border-radius: 12px; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.1); touch-action: auto; position: relative; z-index: 100; }
-        .card-inner-desc { font-size: 8px; color: #94a3b8; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 4px; pointer-events: none; }
         .tab-btn.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; }
         .tab-content { display: none; width: 100%; height: 100%; }
         .tab-content.active { display: flex; flex-direction: column; }
         .input-group label { display: block; font-size: 11px; font-weight: 900; color: #94a3b8; margin-bottom: 2px; }
         .input-group input, .input-group textarea, .input-group select { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 8px; color: #fff; outline: none; font-size: 13px; }
-        .history-box { background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 12px; padding: 10px; max-height: 100px; overflow-y: auto; font-size: 10px; }
+        .history-box { background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 12px; padding: 10px; max-height: 120px; overflow-y: auto; font-size: 10px; }
         @media (max-width: 768px) {
             #bay-grid { grid-template-columns: repeat(5, 1fr) !important; gap: 4px !important; overflow-x: auto; }
             .bay-item { min-width: 140px; min-height: 180px !important; }
+            .list-table th, .list-table td { font-size: 8px !important; padding: 4px 2px !important; }
         }
     </style>
 </head>
@@ -41,20 +36,19 @@
 
     <div id="upload-modal" class="fixed inset-0 bg-slate-950 z-[9999] hidden flex-col items-center justify-center p-6 text-center">
         <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-lg border border-white/5">
-            <h2 class="text-2xl text-blue-500 mb-4 font-black uppercase italic">EXCEL DATA IMPORTER</h2>
-            <p class="text-slate-400 text-sm mb-6">엑셀에서 저장한 <b>CSV</b> 파일을 선택하세요.</p>
+            <h2 class="text-2xl text-blue-500 mb-4 font-black italic uppercase">Excel Data Importer</h2>
             <input type="file" id="csv-file" accept=".csv" class="mb-6 text-xs text-slate-500 block w-full border border-dashed border-slate-700 p-4 rounded-xl">
             <div id="upload-status" class="text-xs text-amber-500 mb-4 h-4 font-bold"></div>
             <div class="flex gap-2">
                 <button onclick="closeModal('upload-modal')" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">닫기</button>
-                <button onclick="processCSV()" class="flex-1 py-4 bg-blue-600 rounded-2xl font-bold text-white">이관 시작</button>
+                <button onclick="processCSV()" class="flex-1 py-4 bg-blue-600 rounded-2xl font-bold text-white uppercase">이관 시작</button>
             </div>
         </div>
     </div>
 
-    <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9000] flex items-center justify-center p-6 text-center">
-        <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5 text-white">
-            <h1 class="text-3xl text-blue-500 mb-6 font-black italic">LK MOTORS V7.1</h1>
+    <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9000] flex items-center justify-center p-6 text-center text-white">
+        <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5">
+            <h1 class="text-3xl text-blue-500 mb-6 font-black italic uppercase">LK MOTORS ERP</h1>
             <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center outline-none border border-transparent focus:border-blue-500 text-white font-bold">
             <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold uppercase">Enter System</button>
         </div>
@@ -62,12 +56,12 @@
 
     <nav class="h-14 bg-slate-900 border-b border-white/5 flex items-center px-4 justify-between shrink-0">
         <div class="flex gap-4 h-full">
-            <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black text-xs">현황판</button>
-            <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black text-xs">예약관리</button>
-            <button onclick="showTab('customer')" id="btn-customer" class="tab-btn font-black text-xs text-amber-500">고객이력</button>
+            <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black text-xs uppercase">현황판</button>
+            <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black text-xs uppercase">예약관리</button>
+            <button onclick="showTab('customer')" id="btn-customer" class="tab-btn font-black text-xs uppercase text-amber-500">고객이력</button>
         </div>
         <div class="flex gap-2">
-            <button onclick="document.getElementById('upload-modal').style.display='flex'" class="bg-slate-800 px-3 py-1.5 rounded-lg font-black text-[10px] text-blue-400 border border-blue-500/30">DB가져오기</button>
+            <button onclick="document.getElementById('upload-modal').style.display='flex'" class="bg-slate-800 px-3 py-1.5 rounded-lg font-black text-[10px] text-blue-400">DB가져오기</button>
             <button onclick="openEditModal(null)" class="bg-blue-600 px-3 py-1.5 rounded-lg font-black text-[10px] text-white">신규등록</button>
         </div>
     </nav>
@@ -84,13 +78,15 @@
 
     <main id="tab-res" class="tab-content p-2 gap-2">
         <div class="flex gap-2 shrink-0">
-            <button onclick="toggleResMode('cal')" id="btn-m-cal" class="bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold">캘린더</button>
-            <button onclick="toggleResMode('list')" id="btn-m-list" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold">상세 리스트</button>
+            <button onclick="toggleResMode('cal')" id="btn-m-cal" class="bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold">달력</button>
+            <button onclick="toggleResMode('list')" id="btn-m-list" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold">리스트</button>
         </div>
-        <div id="cal-view" class="flex-1 bg-slate-900 rounded-2xl p-2 border border-white/5 overflow-hidden"><div id='calendar' class="h-full"></div></div>
-        <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-2xl p-4 overflow-y-auto border border-white/5 text-[10px]">
-            <table class="w-full text-left font-bold text-slate-300">
-                <thead class="text-slate-500 border-b border-white/5 uppercase"><tr><th class="py-2">일시</th><th>번호</th><th>모델</th><th>이름</th></tr></thead>
+        <div id="cal-view" class="flex-1 bg-slate-900 rounded-2xl p-2 border border-white/5 overflow-hidden"><div id='calendar' class="h-full text-[9px]"></div></div>
+        <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-2xl p-2 overflow-y-auto border border-white/5">
+            <table class="w-full text-left font-bold text-slate-300 text-[9px] list-table">
+                <thead class="text-slate-500 border-b border-white/5 uppercase">
+                    <tr><th class="py-2">일시</th><th>번호</th><th>모델</th><th>차대번호</th><th>연락처</th><th>정비내용</th></tr>
+                </thead>
                 <tbody id="list-body"></tbody>
             </table>
         </div>
@@ -142,7 +138,7 @@
                 <div class="input-group"><label>최초 등록일</label><input type="date" id="c-first-date"></div>
             </div>
             <div class="bg-slate-800 p-3 rounded-xl border border-white/5 mb-4 max-h-40 overflow-y-auto custom-scroll" id="c-history-list"></div>
-            <button onclick="saveCustomer()" class="w-full py-3 bg-amber-600 text-white rounded-xl font-black">정보 업데이트</button>
+            <button onclick="saveCustomer()" class="w-full py-3 bg-amber-600 text-white rounded-xl font-black">DB 업데이트</button>
         </div>
     </div>
 
@@ -160,16 +156,10 @@
         const db = firebase.database();
         let calendar;
 
-        // [핵심] 모든 초기화 함수를 로그인 직후 순차적으로 시동합니다.
         function login() {
             if(document.getElementById('pw').value === "9999") {
                 document.getElementById('login-layer').style.display = 'none';
-                initTimeSelect();
-                initBays(); // 베이 틀 생성
-                initCalendar(); // 달력 틀 생성
-                initDraggable(); // 드래그 틀 생성
-                syncCustomerDB(""); // 고객 DB 연결
-                startSync(); // 데이터 실시간 감시 엔진 가동
+                initTimeSelect(); initBays(); initCalendar(); initDraggable(); syncCustomerDB(""); startSync();
             } else { alert("PASS ERROR"); }
         }
 
@@ -190,9 +180,12 @@
             }
         }
 
+        // [최적화] 데이터 감시 로직 개선
         function startSync() {
             db.ref('repairs').on('value', (s) => {
                 const data = s.val();
+                if(!data) return;
+                
                 document.querySelectorAll('.dr-zone').forEach(z => z.innerHTML = ""); 
                 document.getElementById('list-body').innerHTML = "";
                 
@@ -209,7 +202,15 @@
                     
                     const carHtml = `<div class="car-card shadow-lg" onclick="openEditModal('${id}')"><div class="flex justify-between items-start"><span class="text-blue-400 font-black text-[11px] block">${car.carNo}</span><span class="text-[8px] text-slate-400">${car.model || ''}</span></div><div class="card-inner-desc truncate pointer-events-none">${car.desc || ''}</div></div>`;
                     
-                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5" onclick="openEditModal('${id}')"><td>${car.date}</td><td class="text-blue-400">${car.carNo}</td><td>${car.model}</td><td>${car.name}</td></tr>`;
+                    // [리스트 강화] 차대번호, 연락처, 정비내용 추가
+                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5 hover:bg-slate-800" onclick="openEditModal('${id}')">
+                        <td class="py-2"><span>${car.date}</span><br><span class="opacity-50">${car.r_time||''}</span></td>
+                        <td class="text-blue-400">${car.carNo}</td>
+                        <td>${car.model||'-'}</td>
+                        <td class="opacity-40 italic">${car.vin||'-'}</td>
+                        <td class="text-amber-500">${car.phone||'-'}</td>
+                        <td class="truncate max-w-[100px]">${car.desc||'-'}</td>
+                    </tr>`;
 
                     if(car.bay == "0") {
                         const reserveDate = new Date(car.date);
@@ -229,7 +230,6 @@
             });
         }
 
-        // CSV 정밀 파서 (엑셀 장부 전용)
         async function processCSV() {
             const fileInput = document.getElementById('csv-file');
             const status = document.getElementById('upload-status');
@@ -265,7 +265,6 @@
             });
         }
 
-        // 공통 필수 함수들
         function saveData() {
             const id = document.getElementById('m-id').value;
             const data = { carNo: document.getElementById('m-car').value.toUpperCase(), name: document.getElementById('m-name').value, phone: document.getElementById('m-phone').value, mechanic: document.getElementById('m-mechanic').value, date: document.getElementById('m-date').value, r_time: document.getElementById('m-time').value, model: document.getElementById('m-model').value, km: document.getElementById('m-km').value, desc: document.getElementById('m-desc').value, vin: document.getElementById('m-vin').value.toUpperCase(), firstDate: document.getElementById('m-first-date').value, parts: document.getElementById('m-parts').value, labor: document.getElementById('m-labor').value };
@@ -302,7 +301,7 @@
             db.ref('repairs/'+id).once('value', s => {
                 const d = s.val(); const hItem = { date: d.date, desc: d.desc, km: d.km, mechanic: d.mechanic, parts: d.parts||"-", labor: d.labor||0, phone: d.phone, vin: d.vin };
                 db.ref('customers').orderByChild('carNo').equalTo(d.carNo).once('value', cs => { if(cs.exists()) db.ref('customers/'+Object.keys(cs.val())[0]+'/history').push(hItem); });
-                db.ref('repairs/'+id).remove().then(() => { alert("출고완료/이력저장"); closeModal('edit-modal'); });
+                db.ref('repairs/'+id).remove().then(() => { alert("출고완료"); closeModal('edit-modal'); });
             });
         }
 
