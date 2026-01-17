@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - 실시간 작업 현황판</title>
+    <title>LK MOTORS - 실시간 관제 시스템</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,93 +11,110 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; background: #0f172a; color: #f1f5f9; overflow-x: hidden; }
-        
-        /* 인동그룹 특유의 다크 카드 스타일 */
         .dashboard-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(255,255,255,0.05); }
-        .bay-card { background: #1e293b; border: 2px dashed #334155; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .bay-card { background: #1e293b; border: 2px dashed #334155; transition: all 0.4s; }
         .bay-active { border: 2px solid #3b82f6; background: #0f172a; box-shadow: 0 0 25px rgba(59, 130, 246, 0.2); }
-        
-        /* 진행바 애니메이션 */
         .progress-ani { transition: width 0.8s ease-in-out; }
-        
-        /* 모바일 대응 스크롤 */
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
     </style>
 </head>
 <body class="h-screen flex flex-col p-2 lg:p-4">
 
+    <div id="login-screen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-6">
+        <div class="bg-slate-800 p-10 rounded-[40px] shadow-2xl border border-white/10 w-full max-w-sm text-center">
+            <h1 class="text-3xl font-black text-white italic mb-2">LK MOTORS</h1>
+            <p class="text-slate-500 text-xs mb-8 uppercase font-bold tracking-widest">Administrator Only</p>
+            <input type="password" id="admin-pw" placeholder="비밀번호 입력" class="w-full bg-slate-900 border-none rounded-2xl py-4 px-6 text-white mb-4 focus:ring-2 focus:ring-blue-500 outline-none text-center">
+            <button onclick="checkLogin()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg">시스템 접속</button>
+        </div>
+    </div>
+
     <header class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <div class="dashboard-card p-4 rounded-3xl flex justify-between items-center border-l-4 border-blue-500">
             <div><p class="text-[10px] text-slate-500 font-bold uppercase">공장 내 차량</p><p id="stat-total" class="text-2xl font-black text-white">0대</p></div>
-            <div class="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-500"><i class="fas fa-warehouse"></i></div>
+            <div class="text-blue-500 opacity-20 text-2xl"><i class="fas fa-warehouse"></i></div>
         </div>
         <div class="dashboard-card p-4 rounded-3xl flex justify-between items-center border-l-4 border-indigo-500">
             <div><p class="text-[10px] text-slate-500 font-bold uppercase">오늘 예약</p><p id="stat-book" class="text-2xl font-black text-white">0대</p></div>
-            <div class="w-10 h-10 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-500"><i class="fas fa-calendar-check"></i></div>
+            <div class="text-indigo-500 opacity-20 text-2xl"><i class="fas fa-calendar-check"></i></div>
         </div>
         <div class="dashboard-card p-4 rounded-3xl flex justify-between items-center border-l-4 border-amber-500">
             <div><p class="text-[10px] text-slate-500 font-bold uppercase">작업 가동률</p><p id="stat-rate" class="text-2xl font-black text-white">0%</p></div>
-            <div class="w-10 h-10 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-500"><i class="fas fa-chart-line"></i></div>
+            <div class="text-amber-500 opacity-20 text-2xl"><i class="fas fa-chart-line"></i></div>
         </div>
         <div class="dashboard-card p-4 rounded-3xl flex justify-between items-center border-l-4 border-emerald-500">
             <div><p class="text-[10px] text-slate-500 font-bold uppercase">오늘 출고</p><p id="stat-done" class="text-2xl font-black text-white">0대</p></div>
-            <div class="w-10 h-10 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500"><i class="fas fa-shipping-fast"></i></div>
+            <div class="text-emerald-500 opacity-20 text-2xl"><i class="fas fa-shipping-fast"></i></div>
         </div>
     </header>
 
-    <section class="flex-1 grid grid-cols-2 md:grid-cols-5 gap-3 mb-4 content-start custom-scroll overflow-y-auto" id="bay-grid">
-        </section>
+    <section class="flex-1 grid grid-cols-2 md:grid-cols-5 gap-3 mb-4 content-start overflow-y-auto" id="bay-grid"></section>
 
     <footer class="h-1/3 grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="dashboard-card rounded-[32px] p-5 flex flex-col overflow-hidden">
             <h3 class="text-sm font-black text-blue-400 mb-4 flex items-center gap-2"><i class="fas fa-tools"></i> 수리 대기</h3>
-            <div id="wait-list" class="flex-1 overflow-y-auto space-y-2 custom-scroll"></div>
+            <div id="wait-list" class="flex-1 overflow-y-auto space-y-2"></div>
         </div>
         <div class="dashboard-card rounded-[32px] p-5 flex flex-col overflow-hidden">
-            <h3 class="text-sm font-black text-indigo-400 mb-4 flex items-center gap-2"><i class="fas fa-calendar-alt"></i> 내일 예약</h3>
-            <div id="book-list" class="flex-1 overflow-y-auto space-y-2 custom-scroll"></div>
+            <h3 class="text-sm font-black text-indigo-400 mb-4 flex items-center gap-2"><i class="fas fa-calendar-alt"></i> 예약 현황</h3>
+            <div id="book-list" class="flex-1 overflow-y-auto space-y-2"></div>
         </div>
         <div class="dashboard-card rounded-[32px] p-5 flex flex-col overflow-hidden">
-            <h3 class="text-sm font-black text-emerald-400 mb-4 flex items-center gap-2"><i class="fas fa-check-circle"></i> 오늘 출고 완료</h3>
-            <div id="done-list" class="flex-1 overflow-y-auto space-y-2 custom-scroll"></div>
+            <h3 class="text-sm font-black text-emerald-400 mb-4 flex items-center gap-2"><i class="fas fa-check-circle"></i> 출고 완료</h3>
+            <div id="done-list" class="flex-1 overflow-y-auto space-y-2"></div>
         </div>
     </footer>
 
-    <div id="control-panel" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center p-4 backdrop-blur-md">
+    <div id="control-panel" class="fixed inset-0 bg-black/90 z-[150] hidden flex-col items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-slate-900 w-full max-w-md rounded-[45px] overflow-hidden shadow-2xl border border-white/10">
             <div class="p-8 pb-4 text-white">
                 <div class="flex justify-between items-center mb-4">
-                    <span id="p-label" class="bg-blue-600 px-4 py-1 rounded-full text-[10px] font-black uppercase">입고 확인</span>
-                    <span id="p-percent" class="text-blue-400 text-sm font-black">25%</span>
+                    <span id="p-label" class="bg-blue-600 px-4 py-1 rounded-full text-[10px] font-black uppercase">상태 대기</span>
+                    <span id="p-percent" class="text-blue-400 text-sm font-black">0%</span>
                 </div>
                 <div class="w-full bg-slate-800 h-2 rounded-full mb-6">
-                    <div id="p-bar" class="bg-blue-500 h-2 rounded-full progress-ani" style="width: 25%;"></div>
+                    <div id="p-bar" class="bg-blue-500 h-2 rounded-full progress-ani" style="width: 0%;"></div>
                 </div>
-                <div class="bg-slate-800/50 p-4 rounded-2xl border-l-4 border-blue-500 mb-6">
-                    <p class="text-[10px] text-slate-500 font-bold mb-1">현재 상태 코멘트</p>
-                    <p id="p-comment" class="text-sm font-bold text-slate-200">차량이 입고되었습니다.</p>
-                </div>
+                <p id="p-car" class="text-2xl font-black mb-1 text-white">차량번호</p>
+                <p id="p-comment" class="text-xs text-slate-400">정비 코멘트가 여기에 표시됩니다.</p>
             </div>
-
             <div class="bg-white p-8 rounded-t-[45px]">
-                <div class="flex justify-between items-center mb-6">
-                    <h4 class="text-lg font-black text-slate-800 italic" id="p-car">경남99바5374</h4>
-                    <button onclick="closeControl()" class="w-10 h-10 bg-slate-100 rounded-full text-slate-400">&times;</button>
-                </div>
                 <div class="grid grid-cols-2 gap-3 mb-6">
                     <button onclick="updateStep(1)" class="py-4 bg-slate-800 text-white rounded-2xl text-[11px] font-bold">1단계: 입고</button>
                     <button onclick="updateStep(2)" class="py-4 bg-slate-800 text-white rounded-2xl text-[11px] font-bold">2단계: 진단</button>
                     <button onclick="updateStep(3)" class="py-4 bg-slate-800 text-white rounded-2xl text-[11px] font-bold">3단계: 수리중</button>
-                    <button onclick="updateStep(4)" class="py-4 bg-blue-600 text-white rounded-2xl text-[11px] font-bold shadow-xl shadow-blue-200">4단계: 완료</button>
+                    <button onclick="updateStep(4)" class="py-4 bg-blue-600 text-white rounded-2xl text-[11px] font-bold">4단계: 완료</button>
                 </div>
-                <button onclick="finishRepair()" class="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-sm shadow-xl">최종 출고 및 데이터 삭제</button>
+                <div class="flex gap-2">
+                    <button onclick="closeControl()" class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold">닫기</button>
+                    <button onclick="finishRepair()" class="flex-1 py-4 bg-red-600 text-white rounded-2xl font-bold">출고/삭제</button>
+                </div>
             </div>
         </div>
     </div>
 
+    <div id="res-modal" class="fixed inset-0 bg-black/80 z-[200] hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-lg rounded-[40px] overflow-hidden p-8">
+            <h2 class="text-2xl font-black text-slate-800 mb-6">신규 정비 등록</h2>
+            <div class="space-y-4 text-slate-800">
+                <input type="text" id="reg-carNo" placeholder="차량 번호 (예: 12가 3456)" class="w-full bg-slate-100 rounded-2xl py-4 px-5 outline-none font-bold">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="reg-owner" placeholder="고객명" class="w-full bg-slate-100 rounded-2xl py-4 px-5 outline-none font-bold">
+                    <input type="number" id="reg-bay" placeholder="배정 BAY (1~10)" class="w-full bg-slate-100 rounded-2xl py-4 px-5 outline-none font-bold">
+                </div>
+                <textarea id="reg-desc" placeholder="정비 내용 입력" class="w-full bg-slate-100 rounded-2xl py-4 px-5 outline-none h-24 resize-none font-bold"></textarea>
+            </div>
+            <div class="flex gap-3 mt-8">
+                <button onclick="closeResForm()" class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold">취소</button>
+                <button onclick="saveReservation()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black">등록 하기</button>
+            </div>
+        </div>
+    </div>
+
+    <button onclick="openReservationForm()" class="fixed bottom-10 right-10 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl z-40 flex items-center justify-center text-2xl">
+        <i class="fas fa-plus"></i>
+    </button>
+
     <script>
-        // 파이어베이스 설정 (기존 설정 유지)
         const firebaseConfig = {
             apiKey: "AIzaSyDhTPGNKNm38PSBdATs9lks0lYu52QrP3A",
             authDomain: "lkmotors-246f1.firebaseapp.com",
@@ -110,209 +127,112 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let currentKey = ""; // 현재 조작 중인 차량 Key
-        let currentCar = ""; // 현재 조작 중인 차량 번호
+        let currentKey = ""; 
 
-        // 1. 베이(BAY) 현황판 초기화
+        // 로그인 로직
+        function checkLogin() {
+            if(document.getElementById('admin-pw').value === "9999") {
+                document.getElementById('login-screen').style.display = 'none';
+                initBays();
+            } else { alert("비밀번호가 틀렸습니다."); }
+        }
+
+        // 현황판 초기화
         function initBays() {
             const grid = document.getElementById('bay-grid');
             grid.innerHTML = "";
             for(let i=1; i<=10; i++) {
                 grid.innerHTML += `
-                    <div id="bay-${i}" class="bay-card rounded-[32px] p-5 flex flex-col items-center justify-center min-h-[160px] relative overflow-hidden">
-                        <span class="absolute top-4 left-5 text-[9px] font-black text-slate-600 tracking-tighter uppercase">BAY ${i}</span>
+                    <div id="bay-${i}" class="bay-card rounded-[32px] p-5 flex flex-col items-center justify-center min-h-[160px] relative">
+                        <span class="absolute top-4 left-5 text-[9px] font-black text-slate-600">BAY ${i}</span>
                         <div class="text-slate-700/30 text-6xl font-black mb-1">${i}</div>
-                        <p class="text-[10px] text-slate-600 font-bold">빈 정비 베이</p>
-                    </div>
-                `;
+                        <p class="text-[10px] text-slate-600 font-bold">비어있음</p>
+                    </div>`;
             }
             startSync();
         }
 
-        // 2. 실시간 데이터 동기화 (인동그룹 핵심 기능)
         function startSync() {
             db.ref('repairs').on('value', (s) => {
                 const data = s.val();
-                clearBays(); // 베이 초기화 후 재배치
-                let stats = { total: 0, book: 0, done: 0, working: 0 };
+                clearBaysUI();
+                let counts = { total: 0, working: 0, done: 0 };
+                const waitList = document.getElementById('wait-list'); waitList.innerHTML = "";
 
                 for(let key in data) {
                     const car = data[key];
-                    stats.total++;
-                    
-                    if(car.status === "완료") stats.done++;
-                    
-                    // 베이에 배정된 경우
-                    if(car.bay && car.bay !== "-") {
-                        stats.working++;
+                    counts.total++;
+                    if(car.status === "완료") counts.done++;
+
+                    if(car.bay && car.bay > 0) {
+                        counts.working++;
                         const bayEl = document.getElementById(`bay-${car.bay}`);
                         if(bayEl) {
-                            bayEl.className = "bay-card bay-active rounded-[32px] p-5 flex flex-col items-center justify-center min-h-[160px] relative overflow-hidden cursor-pointer";
-                            bayEl.onclick = () => openControl(key, car.carNo, car.step);
-                            bayEl.innerHTML = `
-                                <span class="absolute top-4 left-5 text-[9px] font-black text-blue-400 tracking-tighter uppercase">BAY ${car.bay}</span>
-                                <div class="text-center">
-                                    <p class="text-xs text-blue-500 font-bold mb-1">${car.owner || '정비중'}</p>
-                                    <p class="text-xl font-black text-white tracking-tighter mb-2">${car.carNo}</p>
-                                    <span class="bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full text-[9px] font-black">${car.status}</span>
-                                </div>
-                            `;
+                            bayEl.className = "bay-card bay-active rounded-[32px] p-5 flex flex-col items-center justify-center min-h-[160px] relative cursor-pointer";
+                            bayEl.onclick = () => openControl(key, car);
+                            bayEl.innerHTML = `<span class="absolute top-4 left-5 text-[9px] font-black text-blue-400">BAY ${car.bay}</span>
+                                <p class="text-xl font-black text-white mb-1">${car.carNo}</p>
+                                <span class="bg-blue-600 px-3 py-1 rounded-full text-[9px] font-bold">${car.status}</span>`;
                         }
+                    } else {
+                        waitList.innerHTML += `<div class="p-3 bg-slate-800 rounded-xl text-xs flex justify-between items-center" onclick="alert('${car.desc}')"><span>${car.carNo}</span><span class="text-slate-500">${car.owner}</span></div>`;
                     }
                 }
-                updateStats(stats);
+                updateStatCards(counts);
             });
         }
 
-        // 3. 정비 단계 조작 함수 (인동그룹 스타일 패널)
-        function openControl(key, carNo, step) {
+        function openControl(key, car) {
             currentKey = key;
-            currentCar = carNo;
-            document.getElementById('p-car').innerText = carNo;
+            document.getElementById('p-car').innerText = car.carNo;
+            document.getElementById('p-label').innerText = car.status;
+            document.getElementById('p-percent').innerText = car.percent || "0%";
+            document.getElementById('p-bar').style.width = car.percent || "0%";
             document.getElementById('control-panel').style.display = 'flex';
-            // 현재 상태 반영 로직 추가 가능
         }
 
         function updateStep(step) {
-            const steps = {
-                1: { status: "입고확인", percent: "25%", comment: "차량이 공장에 입고되었습니다." },
-                2: { status: "정밀진단", percent: "50%", comment: "전문 정비사가 고장 원인을 진단 중입니다." },
-                3: { status: "수리진행", percent: "75%", comment: "부품 교체 및 수리 작업이 진행 중입니다." },
-                4: { status: "완료", percent: "100%", comment: "정비가 완료되었습니다. 출고 가능합니다." }
-            };
-            const target = steps[step];
-            
-            db.ref('repairs/' + currentKey).update({
-                status: target.status,
-                step: step,
-                percent: target.percent,
-                comment: target.comment
-            }).then(() => {
-                document.getElementById('p-label').innerText = target.status;
-                document.getElementById('p-percent').innerText = target.percent;
-                document.getElementById('p-bar').style.width = target.percent;
-                document.getElementById('p-comment').innerText = target.comment;
-            });
+            const info = [
+                {},
+                {s:"입고확인", p:"25%", c:"차량이 베이에 입고되었습니다."},
+                {s:"정밀진단", p:"50%", c:"부품 점검 및 고장 원인 파악 중입니다."},
+                {s:"수리진행", p:"75%", c:"주요 정비 및 부품 교체 작업 중입니다."},
+                {s:"완료", p:"100%", c:"모든 정비가 완료되었습니다."}
+            ][step];
+            db.ref('repairs/'+currentKey).update({status:info.s, percent:info.p, comment:info.c});
+        }
+
+        function saveReservation() {
+            const carNo = document.getElementById('reg-carNo').value;
+            const bay = document.getElementById('reg-bay').value;
+            if(!carNo) return alert("차량번호는 필수입니다.");
+            db.ref('repairs').push({
+                carNo: carNo, owner: document.getElementById('reg-owner').value,
+                bay: bay, status: "대기중", percent: "0%", desc: document.getElementById('reg-desc').value
+            }).then(() => { closeResForm(); });
         }
 
         function finishRepair() {
-            if(confirm("정비를 종료하고 차량을 출고 처리하시겠습니까?\n데이터는 이력으로 이동하며 현황판에서 사라집니다.")) {
-                db.ref('repairs/' + currentKey).remove().then(() => {
-                    alert("출고 처리가 완료되었습니다.");
-                    closeControl();
-                });
+            if(confirm("출고 처리하시겠습니까? 데이터가 삭제됩니다.")) {
+                db.ref('repairs/'+currentKey).remove().then(() => closeControl());
             }
         }
 
-        function clearBays() {
+        function clearBaysUI() {
             for(let i=1; i<=10; i++) {
                 const b = document.getElementById(`bay-${i}`);
-                b.className = "bay-card rounded-[32px] p-5 flex flex-col items-center justify-center min-h-[160px] relative overflow-hidden";
-                b.onclick = null;
-                b.innerHTML = `
-                    <span class="absolute top-4 left-5 text-[9px] font-black text-slate-600 tracking-tighter uppercase">BAY ${i}</span>
-                    <div class="text-slate-700/30 text-6xl font-black mb-1">${i}</div>
-                    <p class="text-[10px] text-slate-600 font-bold">빈 정비 베이</p>
-                `;
+                b.className = "bay-card rounded-[32px] p-5 flex flex-col items-center justify-center min-h-[160px] relative";
+                b.innerHTML = `<span class="absolute top-4 left-5 text-[9px] font-black text-slate-600">BAY ${i}</span><div class="text-slate-700/30 text-6xl font-black mb-1">${i}</div><p class="text-[10px] text-slate-600 font-bold">비어있음</p>`;
             }
         }
-
-        function updateStats(s) {
-            document.getElementById('stat-total').innerText = s.total + "대";
-            document.getElementById('stat-done').innerText = s.done + "대";
-            document.getElementById('stat-rate').innerText = (s.working * 10) + "%";
+        function updateStatCards(c) {
+            document.getElementById('stat-total').innerText = c.total+"대";
+            document.getElementById('stat-rate').innerText = (c.working*10)+"%";
+            document.getElementById('stat-done').innerText = c.done+"대";
         }
-
+        function openReservationForm() { document.getElementById('res-modal').style.display = 'flex'; }
+        function closeResForm() { document.getElementById('res-modal').style.display = 'none'; }
         function closeControl() { document.getElementById('control-panel').style.display = 'none'; }
-        
-        initBays();
     </script>
 </body>
-<div id="login-screen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-6">
-    <div class="bg-slate-800 p-10 rounded-[40px] shadow-2xl border border-white/10 w-full max-w-sm text-center">
-        <h1 class="text-3xl font-black text-white italic mb-2">LK MOTORS</h1>
-        <p class="text-slate-500 text-xs mb-8 uppercase font-bold tracking-widest">Administrator Only</p>
-        <input type="password" id="admin-pw" placeholder="비밀번호 입력" class="w-full bg-slate-900 border-none rounded-2xl py-4 px-6 text-white mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
-        <button onclick="checkLogin()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-500/30">시스템 접속</button>
-    </div>
-</div>
-
-<button onclick="openReservationForm()" class="fixed bottom-10 right-10 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl z-40 flex items-center justify-center text-2xl hover:scale-110 transition-transform">
-    <i class="fas fa-plus"></i>
-</button>
-
-<div id="res-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white w-full max-w-lg rounded-[40px] overflow-hidden">
-        <div class="p-8">
-            <h2 class="text-2xl font-black text-slate-800 mb-6">신규 정비 예약 등록</h2>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">차량 번호</label>
-                    <input type="text" id="reg-carNo" placeholder="예: 12가 3456" class="w-full bg-slate-100 border-none rounded-2xl py-4 px-5 text-slate-800 outline-none mt-1">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">고객명</label>
-                        <input type="text" id="reg-owner" placeholder="홍길동" class="w-full bg-slate-100 border-none rounded-2xl py-4 px-5 text-slate-800 outline-none mt-1">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">배정 BAY (1~10)</label>
-                        <input type="number" id="reg-bay" placeholder="1" class="w-full bg-slate-100 border-none rounded-2xl py-4 px-5 text-slate-800 outline-none mt-1">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">정비 내용</label>
-                    <textarea id="reg-desc" placeholder="엔진오일 교환 및 브레이크 패드 점검" class="w-full bg-slate-100 border-none rounded-2xl py-4 px-5 text-slate-800 outline-none mt-1 h-24 resize-none"></textarea>
-                </div>
-            </div>
-            <div class="flex gap-3 mt-8">
-                <button onclick="closeResForm()" class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold">취소</button>
-                <button onclick="saveReservation()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg">예약 확정 및 등록</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    // 로그인 체크 함수
-    function checkLogin() {
-        const pw = document.getElementById('admin-pw').value;
-        if(pw === "9999") { // 비밀번호 설정 (원하시는 번호로 수정 가능)
-            document.getElementById('login-screen').classList.add('hidden');
-        } else {
-            alert("관리자 비밀번호가 일치하지 않습니다.");
-        }
-    }
-
-    // 예약 모달 열기/닫기
-    function openReservationForm() { document.getElementById('res-modal').style.display = 'flex'; }
-    function closeResForm() { document.getElementById('res-modal').style.display = 'none'; }
-
-    // 데이터베이스 저장 함수
-    function saveReservation() {
-        const carNo = document.getElementById('reg-carNo').value;
-        const owner = document.getElementById('reg-owner').value;
-        const bay = document.getElementById('reg-bay').value;
-        const desc = document.getElementById('reg-desc').value;
-
-        if(!carNo || !owner) return alert("차량번호와 고객명은 필수입니다.");
-
-        db.ref('repairs').push({
-            carNo: carNo,
-            owner: owner,
-            bay: bay,
-            status: "입고확인",
-            step: 1,
-            percent: "25%",
-            desc: desc,
-            timestamp: Date.now()
-        }).then(() => {
-            alert("정비 예약이 등록되었습니다.");
-            closeResForm();
-            // 입력칸 초기화
-            document.getElementById('reg-carNo').value = "";
-            document.getElementById('reg-owner').value = "";
-        });
-    }
-</script>    
 </html>
