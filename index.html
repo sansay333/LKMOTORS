@@ -327,6 +327,70 @@
                 total: document.getElementById('v-total').innerText 
             };
 
+            <div class="bg-slate-900 p-6 rounded-t-[40px] text-white">
+    <div class="flex justify-between items-center mb-4">
+        <span id="status-label" class="bg-blue-600 px-4 py-1 rounded-full text-xs font-bold">입고 확인</span>
+        <span id="progress-percent" class="text-blue-400 text-sm font-bold">25%</span>
+    </div>
+    
+    <div class="w-full bg-slate-800 h-2 rounded-full mb-6">
+        <div id="progress-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: 25%;"></div>
+    </div>
+
+    <div class="flex justify-between px-2 text-[10px] text-slate-500 text-center">
+        <div id="icon-1" class="text-blue-500"><i class="fas fa-truck-loading block text-xl mb-1"></i>입고</div>
+        <div id="icon-2"><i class="fas fa-search-plus block text-xl mb-1"></i>진단</div>
+        <div id="icon-3"><i class="fas fa-tools block text-xl mb-1"></i>수리중</div>
+        <div id="icon-4"><i class="fas fa-check-circle block text-xl mb-1"></i>완료</div>
+    </div>
+
+    <div class="mt-8 bg-slate-800/50 p-4 rounded-2xl border-l-4 border-blue-500">
+        <p class="text-slate-400 text-[10px] mb-1">정비사 코멘트</p>
+        <p id="current-comment" class="text-sm font-bold text-slate-200">차량이 입고되었습니다.</p>
+    </div>
+</div>
+
+<div class="bg-white p-8 rounded-b-[40px] text-slate-800">
+    <h2 class="text-xl font-black mb-6 flex items-center gap-2">
+        <i class="fas fa-user-cog text-blue-600"></i> 정비사 전용 관리 패널
+    </h2>
+
+    <p class="text-sm font-bold mb-4">정비 단계 수동 조절</p>
+    <div class="grid grid-cols-2 gap-3 mb-8 text-xs font-bold">
+        <button onclick="updateStep(1, '입고', '25%', '차량이 입고되었습니다.')" class="py-4 bg-slate-800 text-white rounded-xl">1단계: 입고</button>
+        <button onclick="updateStep(2, '진단', '50%', '차량 정밀 진단 중입니다.')" class="py-4 bg-slate-800 text-white rounded-xl">2단계: 진단</button>
+        <button onclick="updateStep(3, '수리중', '75%', '부품 교체 및 수리 진행 중입니다.')" class="py-4 bg-slate-800 text-white rounded-xl">3단계: 수리중</button>
+        <button onclick="updateStep(4, '완료', '100%', '정비가 완료되었습니다. 출고 가능합니다.')" class="py-4 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200">4단계: 완료</button>
+    </div>
+
+    <p class="text-sm font-bold mb-3">실시간 코멘트 전송</p>
+    <textarea id="msg-input" placeholder="기사님께 전달할 내용을 입력하세요." class="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 text-sm outline-none h-24 mb-4"></textarea>
+    <button onclick="sendManualComment()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl">코멘트 전송</button>
+</div>
+
+<script>
+// 단계 변경 함수
+function updateStep(step, label, percent, comment) {
+    document.getElementById('status-label').innerText = label + ' 확인';
+    document.getElementById('progress-percent').innerText = percent;
+    document.getElementById('progress-bar').style.width = percent;
+    document.getElementById('current-comment').innerText = comment;
+
+    // 아이콘 색상 변경 로직
+    for(let i=1; i<=4; i++) {
+        document.getElementById('icon-'+i).className = (i <= step) ? 'text-blue-500' : 'text-slate-500';
+    }
+}
+
+// 수동 코멘트 전송 함수
+function sendManualComment() {
+    const msg = document.getElementById('msg-input').value;
+    if(!msg) return alert("내용을 입력해주세요.");
+    document.getElementById('current-comment').innerText = msg;
+    document.getElementById('msg-input').value = "";
+    alert("코멘트가 전송되었습니다.");
+}
+</script>
             if(globalEditKey) {
                 // 수정 모드: update() 사용
                 db.ref('history/'+car+'/'+globalEditKey).update(data)
