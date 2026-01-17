@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - V7.5 MASTER</title>
+    <title>LK MOTORS - V7.6 MASTER</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,9 +33,9 @@
 
     <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9000] flex items-center justify-center p-6 text-center text-white">
         <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5">
-            <h1 class="text-3xl text-blue-500 mb-6 font-black italic uppercase">LK MOTORS V7.5</h1>
+            <h1 class="text-3xl text-blue-500 mb-6 font-black italic uppercase">LK MOTORS V7.6</h1>
             <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center outline-none border border-transparent focus:border-blue-500 text-white font-bold">
-            <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold uppercase">System Enter</button>
+            <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold uppercase shadow-lg active:scale-95 transition-all">접속하기</button>
         </div>
     </div>
 
@@ -43,10 +43,10 @@
         <div class="bg-slate-900 p-8 rounded-[40px] shadow-2xl w-full max-w-lg border border-blue-500/30">
             <h2 class="text-2xl text-blue-500 mb-4 font-black italic">장부 데이터 분석기</h2>
             <input type="file" id="csv-file" accept=".csv" class="mb-6 text-xs text-slate-500 block w-full border border-dashed border-slate-700 p-4 rounded-xl">
-            <div id="upload-status" class="text-sm text-amber-500 mb-4 font-bold h-6">CSV 파일을 선택하세요.</div>
+            <div id="upload-status" class="text-sm text-amber-500 mb-4 font-bold h-6">파일을 선택하세요.</div>
             <div class="flex gap-2">
                 <button onclick="closeModal('upload-modal')" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">취소</button>
-                <button onclick="processCSV()" class="flex-1 py-4 bg-blue-600 rounded-2xl font-bold text-white">이관 시작</button>
+                <button onclick="processCSV()" id="import-btn" class="flex-1 py-4 bg-blue-600 rounded-2xl font-bold text-white">이관 시작</button>
             </div>
         </div>
     </div>
@@ -75,8 +75,8 @@
 
     <main id="tab-res" class="tab-content p-2 gap-2">
         <div class="flex gap-2 shrink-0">
-            <button onclick="toggleResMode('cal')" id="btn-m-cal" class="bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold shadow-lg">캘린더</button>
-            <button onclick="toggleResMode('list')" id="btn-m-list" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold">상세 리스트</button>
+            <button onclick="toggleResMode('cal')" id="btn-m-cal" class="bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold">달력</button>
+            <button onclick="toggleResMode('list')" id="btn-m-list" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold">리스트</button>
         </div>
         <div id="cal-view" class="flex-1 bg-slate-900 rounded-2xl p-2 border border-white/5 overflow-hidden"><div id='calendar' class="h-full text-[9px]"></div></div>
         <div id="list-view" class="hidden flex-1 bg-slate-900 rounded-2xl p-2 overflow-y-auto border border-white/5 shadow-2xl text-[9px]">
@@ -91,12 +91,10 @@
 
     <main id="tab-customer" class="tab-content p-4 gap-4 bg-slate-950">
         <div class="flex flex-col md:flex-row gap-2 items-center justify-between">
-            <input type="text" oninput="syncCustomerDB(this.value)" placeholder="차량번호/이름/연락처 검색..." class="flex-1 bg-slate-800 p-3 rounded-xl outline-none border border-white/5 focus:border-amber-500 text-sm font-bold text-white w-full">
+            <input type="text" id="cust-search" oninput="syncCustomerDB(this.value)" placeholder="차량번호/이름/연락처 검색..." class="flex-1 bg-slate-800 p-3 rounded-xl outline-none border border-white/5 focus:border-amber-500 text-sm font-bold text-white w-full">
             <div class="flex gap-2 shrink-0">
-                <label class="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer border border-white/5">
-                    <input type="checkbox" id="check-all" onchange="toggleSelectAll(this)" class="db-checkbox"> 전체선택
-                </label>
-                <button onclick="deleteSelectedCustomers()" class="bg-red-600 px-4 py-2 rounded-xl text-xs font-black shadow-lg">선택 삭제 (취소가능)</button>
+                <button onclick="toggleSelectAll()" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold border border-white/10">전체 선택/해제</button>
+                <button onclick="deleteSelectedCustomers()" class="bg-red-600 px-4 py-2 rounded-xl text-xs font-black shadow-lg">선택 삭제 (최종확인)</button>
             </div>
         </div>
         <div class="flex-1 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 overflow-y-auto custom-scroll" id="customer-grid"></div>
@@ -104,7 +102,7 @@
 
     <div id="edit-modal" class="fixed inset-0 bg-black/95 z-[9900] hidden items-center justify-center p-2 backdrop-blur-md text-white text-xs overflow-y-auto">
         <div class="bg-slate-900 w-full max-w-2xl rounded-3xl border border-white/10 overflow-hidden relative shadow-2xl p-6">
-            <button onclick="closeModal('edit-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white font-light">&times;</button>
+            <button onclick="closeModal('edit-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white">&times;</button>
             <input type="hidden" id="m-id">
             <div class="grid grid-cols-2 gap-4 mt-4">
                 <div class="space-y-2">
@@ -122,16 +120,16 @@
                 </div>
             </div>
             <div class="flex gap-2 mt-6">
-                <button onclick="deleteRecord('repairs', 'm-id')" class="flex-1 py-3 bg-red-600/80 text-white rounded-xl font-bold uppercase">Delete</button>
-                <button onclick="saveData()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-black uppercase">Save</button>
-                <button onclick="releaseVehicle()" id="rel-btn" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black uppercase">Release</button>
+                <button onclick="deleteRecord('repairs', 'm-id')" class="flex-1 py-3 bg-red-600/80 text-white rounded-xl font-bold uppercase">예약 삭제</button>
+                <button onclick="saveData()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-black uppercase">정보 저장</button>
+                <button onclick="releaseVehicle()" id="rel-btn" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black uppercase">출고 처리</button>
             </div>
         </div>
     </div>
 
     <div id="c-modal" class="fixed inset-0 bg-black/95 z-[9950] hidden items-center justify-center p-2 text-white text-xs overflow-y-auto">
         <div class="bg-slate-900 w-full max-w-lg rounded-3xl p-6 border border-amber-500/20 shadow-2xl relative">
-            <button onclick="closeModal('c-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white font-light">&times;</button>
+            <button onclick="closeModal('c-modal')" class="absolute top-4 right-6 text-slate-500 text-3xl hover:text-white">&times;</button>
             <h2 class="text-lg font-black italic text-amber-500 mb-4 uppercase">Customer Master Database</h2>
             <input type="hidden" id="c-id">
             <div class="grid grid-cols-2 gap-3 mb-4">
@@ -142,11 +140,11 @@
                 <div class="input-group col-span-2"><label>차대번호 (VIN)</label><input type="text" id="c-vin"></div>
                 <div class="input-group col-span-2"><label>최초 등록일</label><input type="date" id="c-first-date"></div>
             </div>
-            <p class="text-[10px] text-amber-500 font-bold mb-2 italic border-b border-white/10 pb-1 uppercase"> 정비 히스토리 (X 클릭 시 개별삭제)</p>
+            <p class="text-[10px] text-amber-500 font-bold mb-2 italic border-b border-white/10 pb-1">정비 히스토리</p>
             <div id="c-history-list" class="max-h-32 overflow-y-auto custom-scroll space-y-1 mb-6"></div>
             <div class="flex gap-2">
-                <button onclick="deleteRecord('customers', 'c-id')" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-xs uppercase">데이터 삭제</button>
-                <button onclick="saveCustomer()" class="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-black text-xs uppercase">정보 수정 완료</button>
+                <button onclick="deleteRecord('customers', 'c-id')" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold uppercase text-xs">고객 삭제</button>
+                <button onclick="saveCustomer()" class="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-black text-xs uppercase">저장/닫기</button>
             </div>
         </div>
     </div>
@@ -172,7 +170,6 @@
             } else { alert("PASS ERROR"); }
         }
 
-        // [최적화] 실시간 분류 로직
         function startSync() {
             db.ref('repairs').on('value', (s) => {
                 const data = s.val();
@@ -186,8 +183,8 @@
                 for(let id in data) {
                     const car = data[id];
                     const carHtml = `<div class="car-card shadow-lg" onclick="openEditModal('${id}')"><div class="flex justify-between items-start"><span class="text-blue-400 font-black text-[11px] block">${car.carNo}</span><span class="text-[8px] text-slate-400">${car.model || ''}</span></div><div class="text-[8px] text-slate-500 mt-1 truncate pointer-events-none">${car.desc || ''}</div></div>`;
-                    
-                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5 hover:bg-slate-800" onclick="openEditModal('${id}')"><td class="py-2 px-1"><span>${car.date}</span></td><td class="text-blue-400">${car.carNo}</td><td>${car.model||'-'}</td><td>${car.name}<br>${car.phone||'-'}</td></tr>`;
+
+                    document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5 hover:bg-slate-800" onclick="openEditModal('${id}')"><td class="py-2 px-1"><span>${car.date}</span></td><td class="text-blue-400 font-bold">${car.carNo}</td><td>${car.model||'-'}</td><td>${car.name}</td></tr>`;
 
                     if(car.bay == "0") {
                         const resDate = new Date(car.date);
@@ -206,29 +203,29 @@
             });
         }
 
-        // [V7.5 추가: 전체 선택 삭제 기능]
-        function toggleSelectAll(master) {
-            document.querySelectorAll('.customer-check').forEach(cb => cb.checked = master.checked);
+        // [V7.6 핵심: 일괄 선택 및 삭제]
+        let allSelected = false;
+        function toggleSelectAll() {
+            allSelected = !allSelected;
+            document.querySelectorAll('.customer-check').forEach(cb => cb.checked = allSelected);
         }
 
         function deleteSelectedCustomers() {
             const selected = Array.from(document.querySelectorAll('.customer-check:checked')).map(cb => cb.value);
             if (selected.length === 0) return alert("삭제할 대상을 선택하세요.");
             
-            if (confirm(`${selected.length}명의 고객 정보를 완전히 삭제하시겠습니까?\n이 작업은 취소할 수 없으며 이력도 함께 삭제됩니다.`)) {
+            if (confirm(`${selected.length}명의 데이터를 영구 삭제하시겠습니까?\n이 작업은 취소할 수 없습니다.`)) {
                 const updates = {};
                 selected.forEach(id => { updates['customers/' + id] = null; });
                 db.ref().update(updates).then(() => {
-                    alert("일괄 삭제 완료.");
-                    document.getElementById('check-all').checked = false;
+                    alert("성공적으로 삭제되었습니다.");
                     syncCustomerDB("");
                 });
             }
         }
 
-        // 고객 DB 동기화 및 렌더링
         function syncCustomerDB(key) {
-            db.ref('customers').once('value', s => {
+            db.ref('customers').on('value', s => {
                 const grid = document.getElementById('customer-grid'); grid.innerHTML = "";
                 s.forEach(c => {
                     const d = c.val();
@@ -266,12 +263,47 @@
         }
 
         function deleteHistoryItem(cId, hId) {
-            if(confirm("이 이력 한 건을 삭제하시겠습니까?")) {
+            if(confirm("이 정비 이력 한 건을 삭제하시겠습니까?")) {
                 db.ref(`customers/${cId}/history/${hId}`).remove().then(() => openCustomerModal(cId));
             }
         }
 
-        // 공통 로직 (저장, 수정, 폐기 등)
+        async function processCSV() {
+            const fileInput = document.getElementById('csv-file');
+            const status = document.getElementById('upload-status');
+            if (!fileInput.files.length) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n');
+                let count = 0;
+                for(let i=0; i<rows.length; i++) {
+                    const cols = rows[i].split(',');
+                    if (cols.length > 5 && cols[2] && cols[2].length > 4) {
+                        const carNo = cols[2].trim();
+                        if (/[0-9]/.test(carNo)) {
+                            let vin = cols[14] ? cols[14].trim() : "";
+                            if(vin.length < 10 && rows[i+1]) {
+                                const nextMatch = rows[i+1].match(/[A-Z0-9]{17}/);
+                                if(nextMatch) vin = nextMatch[0];
+                            }
+                            await db.ref('customers').orderByChild('carNo').equalTo(carNo).once('value', s => {
+                                const name = cols[3].trim();
+                                const data = { carNo, name, model: cols[4].trim(), vin: vin, firstDate: cols[0].trim() };
+                                const hItem = { date: cols[0].trim(), desc: cols[8].trim() + " (₩" + (cols[13]||0) + ")" };
+                                if(s.exists()){ db.ref('customers/'+Object.keys(s.val())[0]+'/history').push(hItem); }
+                                else { db.ref('customers').push({...data, history: [hItem]}); }
+                            });
+                            count++;
+                        }
+                    }
+                }
+                status.innerText = `이관 완료: ${count}건`;
+                setTimeout(() => closeModal('upload-modal'), 2000);
+            };
+            reader.readAsText(fileInput.files[0], 'EUC-KR');
+        }
+
         function saveData() {
             const id = document.getElementById('m-id').value;
             const data = { carNo: document.getElementById('m-car').value.toUpperCase(), name: document.getElementById('m-name').value, phone: document.getElementById('m-phone').value, mechanic: document.getElementById('m-mechanic').value, date: document.getElementById('m-date').value, r_time: document.getElementById('m-time').value, model: document.getElementById('m-model').value, km: document.getElementById('m-km').value, desc: document.getElementById('m-desc').value, vin: document.getElementById('m-vin').value.toUpperCase(), firstDate: document.getElementById('m-first-date').value };
@@ -287,12 +319,12 @@
         function saveCustomer() {
             const id = document.getElementById('c-id').value;
             const data = { carNo: document.getElementById('c-car').value.toUpperCase(), name: document.getElementById('c-name').value, model: document.getElementById('c-model').value, phone: document.getElementById('c-phone').value, vin: document.getElementById('c-vin').value.toUpperCase(), firstDate: document.getElementById('c-first-date').value };
-            db.ref('customers/'+id).update(data).then(() => { alert("저장 완료"); closeModal('c-modal'); syncCustomerDB(""); });
+            db.ref('customers/'+id).update(data).then(() => { closeModal('c-modal'); syncCustomerDB(""); });
         }
 
         function deleteRecord(path, idField) {
             const id = document.getElementById(idField).value;
-            if(id && confirm("영구 삭제하시겠습니까? 취소가 불가능합니다.")) {
+            if(id && confirm("삭제하시겠습니까? 데이터는 복구되지 않습니다.")) {
                 db.ref(path+'/'+id).remove().then(() => { closeModal(idField==='m-id'?'edit-modal':'c-modal'); syncCustomerDB(""); });
             }
         }
