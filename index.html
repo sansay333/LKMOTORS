@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - 통합 관제 시스템 V3.6</title>
+    <title>LK MOTORS - 통합 관제 시스템 V3.7</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -57,11 +57,11 @@
             </div>
             <div class="bg-card rounded-[30px] p-5 flex flex-col shadow-xl">
                 <h3 class="text-indigo-400 font-black text-xs mb-4 uppercase italic border-b border-white/5 pb-2">내일 예약</h3>
-                <div id="tomorrow-zone" class="flex-1 overflow-y-auto custom-scroll"></div>
+                <div id="tomorrow-zone" class="flex-1 overflow-y-auto dr-zone custom-scroll" data-bay="0-tomorrow"></div>
             </div>
             <div class="bg-card rounded-[30px] p-5 flex flex-col shadow-xl border-t-4 border-amber-500">
                 <h3 class="text-amber-500 font-black text-xs mb-4 uppercase italic border-b border-white/5 pb-2">기타 대기</h3>
-                <div id="other-zone" class="flex-1 overflow-y-auto custom-scroll"></div>
+                <div id="other-zone" class="flex-1 overflow-y-auto dr-zone custom-scroll" data-bay="0-other"></div>
             </div>
             <div class="bg-card rounded-[30px] p-5 flex flex-col shadow-xl border-l-4 border-emerald-500">
                 <h3 class="text-emerald-400 font-black text-xs mb-5 italic uppercase border-b border-white/5 pb-2">완료/출고</h3>
@@ -81,7 +81,7 @@
             <button onclick="closeModal()" class="absolute top-6 right-8 text-slate-500 hover:text-white text-4xl transition-all">&times;</button>
             
             <div class="p-10">
-                <h2 class="text-2xl font-black italic text-blue-500 mb-8 uppercase tracking-tighter" id="m-title">Update Information</h2>
+                <h2 class="text-2xl font-black italic text-blue-500 mb-8 uppercase tracking-tighter" id="m-title">Vehicle Data Update</h2>
                 <input type="hidden" id="m-id">
                 
                 <div class="grid grid-cols-2 gap-6">
@@ -89,10 +89,7 @@
                         <div class="input-group"><label>차량 번호</label><input type="text" id="m-car" placeholder="예: 123가 4567"></div>
                         <div class="input-group"><label>고객명</label><input type="text" id="m-name"></div>
                         <div class="input-group"><label>연락처</label><input type="text" id="m-phone"></div>
-                        <div class="input-group">
-                            <label>담당 작업자 (정비사)</label>
-                            <input type="text" id="m-worker" placeholder="정비사 이름 입력">
-                        </div>
+                        <div class="input-group"><label>담당 작업자 (정비사)</label><input type="text" id="m-worker" placeholder="성함 입력"></div>
                     </div>
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
@@ -107,11 +104,11 @@
                 </div>
 
                 <div class="flex gap-4 mt-10">
-                    <button onclick="closeModal()" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold text-slate-400">취소 (창 닫기)</button>
-                    <button onclick="saveData()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-500/20">정보 업데이트/저장</button>
+                    <button onclick="closeModal()" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold text-slate-400 border border-white/5">취소 (창 닫기)</button>
+                    <button onclick="saveData()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-500/20"><i class="fas fa-save mr-2"></i>수정 내용 저장</button>
                 </div>
                 
-                <button id="del-btn" onclick="deleteData()" class="w-full mt-6 text-[10px] text-red-500 font-bold opacity-30 hover:opacity-100 uppercase italic underline">Remove Vehicle Record</button>
+                <button id="del-btn" onclick="deleteData()" class="w-full mt-6 text-[10px] text-red-500 font-bold opacity-30 hover:opacity-100 uppercase italic underline">Remove Data</button>
             </div>
         </div>
     </div>
@@ -152,10 +149,12 @@
             document.querySelectorAll('.dr-zone').forEach(el => {
                 new Sortable(el, { group: 'vehicles', animation: 150, onEnd: (evt) => {
                     const id = evt.item.getAttribute('data-id');
-                    const bay = evt.to.getAttribute('data-bay');
-                    let status = "정비중";
-                    if(bay == "0") status = "수리대기";
-                    if(bay == "99") status = "출고완료";
+                    let bay = evt.to.getAttribute('data-bay');
+                    
+                    // 드래그 대상이 베이나 완료 구역이 아닌 경우(0번 계열) 처리
+                    if(bay.includes('-')) bay = "0"; 
+                    
+                    let status = (bay === "99") ? "출고완료" : (bay === "0" ? "대기중" : "정비중");
                     db.ref('repairs/' + id).update({ bay: bay, status: status });
                 }});
             });
@@ -165,8 +164,6 @@
             db.ref('repairs').on('value', (s) => {
                 const data = s.val();
                 document.querySelectorAll('.dr-zone').forEach(z => z.innerHTML = ""); 
-                document.getElementById('tomorrow-zone').innerHTML = "";
-                document.getElementById('other-zone').innerHTML = "";
                 
                 const events = [];
                 const now = new Date();
@@ -202,7 +199,7 @@
 
         function openEditModal(id) {
             document.getElementById('m-id').value = id || "";
-            document.getElementById('m-title').innerText = id ? "Edit Car Info" : "New Registration";
+            document.getElementById('m-title').innerText = id ? "Vehicle Data Edit" : "New Registration";
             document.getElementById('del-btn').style.display = id ? "block" : "none";
 
             if(id) {
@@ -237,17 +234,17 @@
                 km: document.getElementById('m-km').value,
                 desc: document.getElementById('m-desc').value
             };
-            if(!data.carNo) return alert("차량 번호는 필수입니다.");
+            if(!data.carNo) return alert("차량 번호 입력은 필수입니다.");
 
-            if(id) db.ref('repairs/' + id).update(data).then(() => closeModal());
+            if(id) db.ref('repairs/' + id).update(data).then(() => { alert("데이터가 수정되었습니다."); closeModal(); });
             else {
                 data.bay = "0"; data.status = "대기중";
-                db.ref('repairs').push(data).then(() => closeModal());
+                db.ref('repairs').push(data).then(() => { alert("신규 예약이 등록되었습니다."); closeModal(); });
             }
         }
 
         function deleteData() {
-            if(confirm("정말로 삭제하시겠습니까?")) {
+            if(confirm("이 차량의 모든 정비 데이터를 삭제하시겠습니까?")) {
                 db.ref('repairs/' + document.getElementById('m-id').value).remove().then(() => closeModal());
             }
         }
