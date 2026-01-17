@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LK MOTORS - V4.9 (사진형 베이 레이아웃)</title>
+    <title>LK MOTORS - V5.0 (정보 시각화 완성판)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,38 +21,38 @@
         .tab-content { display: none; width: 100%; height: 100%; }
         .tab-content.active { display: flex; flex-direction: column; }
         
-        /* [사진 04번 BAY 3 스타일 완벽 재현] */
+        /* 베이 스타일 유지 */
         .bay-item { display: flex; flex-direction: column; justify-content: space-between; padding: 10px !important; min-height: 220px !important; border-radius: 20px !important; background: #1e293b !important; border: 1px solid #334155 !important; }
         .bay-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
         .bay-v-no { font-size: 16px; font-weight: 900; color: #3b82f6; line-height: 1.2; }
         .bay-v-model { font-size: 10px; color: #94a3b8; font-weight: 700; margin-top: 2px; }
         .bay-v-desc { font-size: 9px; color: #cbd5e1; margin-top: 5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
         .bay-footer { text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; }
-        .bay-v-worker { font-size: 11px; font-weight: 900; color: #fbbf24; } /* 정비사 하단 배치 */
+        .bay-v-worker { font-size: 11px; font-weight: 900; color: #fbbf24; }
 
         @media (max-width: 768px) {
             #bay-grid { grid-template-columns: repeat(5, 1fr) !important; gap: 4px !important; overflow-x: auto; }
             .bay-item { min-width: 140px; min-height: 180px !important; padding: 6px !important; }
             .bay-v-no { font-size: 12px; }
             .bay-v-desc { font-size: 8px; -webkit-line-clamp: 3; }
-            .list-table th, .list-table td { font-size: 8px !important; padding: 4px 1px !important; }
         }
 
         .input-group label { display: block; font-size: 11px; font-weight: 900; color: #94a3b8; margin-bottom: 2px; }
-        .input-group input, .input-group textarea { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 8px; color: #fff; outline: none; }
+        .input-group input, .input-group textarea { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 8px; color: #fff; outline: none; font-size: 13px; }
+        .fc-event-title { font-weight: 900 !important; }
     </style>
 </head>
 <body class="h-screen flex flex-col">
 
     <div id="login-layer" class="fixed inset-0 bg-slate-950 z-[9999] flex items-center justify-center p-6 text-center">
         <div class="bg-slate-900 p-10 rounded-[40px] shadow-2xl w-full max-w-sm border border-white/5 font-black">
-            <h1 class="text-3xl text-blue-500 mb-6 italic">LK MOTORS ERP</h1>
-            <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center text-white outline-none border border-transparent focus:border-blue-500 font-bold">
+            <h1 class="text-3xl text-blue-500 mb-6 italic">LK MOTORS ERP V5.0</h1>
+            <input type="password" id="pw" placeholder="PASSWORD" class="w-full bg-slate-800 rounded-2xl py-4 px-6 mb-4 text-center text-white outline-none">
             <button onclick="login()" class="w-full py-4 bg-blue-600 rounded-2xl font-bold">ENTER</button>
         </div>
     </div>
 
-    <nav class="h-14 bg-slate-900 border-b border-white/5 flex items-center px-4 justify-between shrink-0">
+    <nav class="h-14 bg-slate-900 border-b border-white/5 flex items-center px-4 justify-between shrink-0 overflow-x-auto">
         <div class="flex gap-4 h-full">
             <button onclick="showTab('status')" id="btn-status" class="tab-btn active font-black text-xs">현황판</button>
             <button onclick="showTab('res')" id="btn-res" class="tab-btn font-black text-xs">예약관리</button>
@@ -63,7 +63,6 @@
 
     <main id="tab-status" class="tab-content active p-2 gap-2 overflow-y-auto custom-scroll">
         <section class="grid grid-cols-5 gap-2 shrink-0" id="bay-grid"></section>
-
         <section class="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-2 pb-10">
             <div class="bg-card rounded-2xl p-3 border-t-2 border-blue-500"><h3 class="text-blue-400 font-black text-[9px] mb-2 uppercase italic">Wait (Today)</h3><div id="today-zone" class="flex-1 dr-zone" data-bay="0"></div></div>
             <div class="bg-card rounded-2xl p-3 border-t-2 border-indigo-500"><h3 class="text-indigo-400 font-black text-[9px] mb-2 uppercase italic">Tomorrow</h3><div id="tomorrow-zone" class="flex-1 dr-zone" data-bay="0-t"></div></div>
@@ -133,6 +132,7 @@
                     <div class="input-group"><label>차대번호</label><input type="text" id="c-vin"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-2"><div class="input-group"><label>이름</label><input type="text" id="c-name"></div><div class="input-group"><label>연락처</label><input type="text" id="c-phone"></div></div>
+                <div class="input-group"><label>최초 등록일</label><input type="date" id="c-first-date"></div>
                 <div class="bg-slate-800 p-3 rounded-xl border border-white/5">
                     <p class="text-[10px] text-amber-500 font-bold mb-1 italic">과거 정비 이력</p>
                     <div id="c-history-list" class="max-h-32 overflow-y-auto space-y-1 custom-scroll"></div>
@@ -160,7 +160,7 @@
             if(document.getElementById('pw').value === "9999") {
                 document.getElementById('login-layer').style.display = 'none';
                 initBays(); initCalendar(); initDraggable(); syncCustomerDB("");
-            } else { alert("PASS ERROR"); }
+            } else { alert("비밀번호 불일치"); }
         }
 
         function initBays() {
@@ -188,11 +188,15 @@
 
                 for(let id in data) {
                     const car = data[id];
-                    events.push({ id, title: `${car.carNo}`, start: car.date, backgroundColor: car.bay==="99"?'#059669':'#2563eb', borderColor: 'transparent' });
+                    // [변경] 캘린더에 차량번호 + 정비내용 표시
+                    const eventTitle = `${car.carNo} [${car.desc || '일반'}]`;
+                    events.push({ id, title: eventTitle, start: car.date, backgroundColor: car.bay==="99"?'#059669':'#2563eb', borderColor: 'transparent' });
                     
+                    // [변경] 일반 전광판 카드에 정비내용(desc) 추가
                     const carHtml = `<div class="car-card shadow-lg" onclick="openEditModal('${id}')">
                         <span class="text-blue-400 font-black text-xs block">${car.carNo}</span>
-                        <p class="text-[8px] text-slate-300 truncate">${car.name} | ${car.mechanic || '미정'}</p>
+                        <p class="text-[9px] text-slate-200 font-bold truncate">${car.model || '모델미정'}</p>
+                        <p class="text-[8px] text-slate-400 truncate mt-1">${car.desc || '정비내용 없음'}</p>
                     </div>`;
 
                     document.getElementById('list-body').innerHTML += `<tr class="border-b border-white/5" onclick="openEditModal('${id}')">
@@ -212,7 +216,6 @@
                     } else {
                         const target = document.getElementById(`bay-zone-${car.bay}`);
                         if(target) {
-                            // [사진 04번 스타일 베이 내부 렌더링 수정]
                             target.innerHTML = `
                                 <div class="flex-1 flex flex-col justify-between" onclick="openEditModal('${id}')">
                                     <div class="bay-header">
@@ -233,6 +236,26 @@
             });
         }
 
+        // 고객 이력 조회 시 모델 및 최초등록일 추가 노출
+        function openCustomerModal(id) {
+            document.getElementById('c-id').value = id;
+            db.ref('customers/'+id).once('value', s => {
+                const d = s.val();
+                document.getElementById('c-car').value = d.carNo; document.getElementById('c-name').value = d.name;
+                document.getElementById('c-phone').value = d.phone; document.getElementById('c-vin').value = d.vin || "";
+                document.getElementById('c-first-date').value = d.firstDate || "";
+                const hList = document.getElementById('c-history-list'); hList.innerHTML = "";
+                if(d.history) Object.values(d.history).reverse().forEach(h => {
+                    hList.innerHTML += `<div class="bg-slate-900/50 p-2 rounded-lg border border-white/5">
+                        <span class="text-amber-500"><b>[${h.date}]</b> 담당: ${h.mechanic||'-'}</span><br>
+                        <span class="text-blue-300 font-bold">${d.model || '모델명없음'}</span> | <span>${h.desc}</span>
+                    </div>`;
+                });
+            });
+            document.getElementById('c-modal').style.display = 'flex';
+        }
+
+        // V4.9 핵심 로직 유지
         function saveData() {
             const id = document.getElementById('m-id').value;
             const data = {
@@ -244,69 +267,41 @@
                 vin: document.getElementById('m-vin').value.toUpperCase()
             };
             if(!data.carNo) return alert("번호 필수");
-            
             db.ref('customers').orderByChild('carNo').equalTo(data.carNo).once('value', s => {
                 const cData = { carNo: data.carNo, name: data.name, phone: data.phone, model: data.model, firstDate: data.firstDate, vin: data.vin };
                 if(!s.exists()) { db.ref('customers').push(cData); }
                 else { db.ref('customers/'+Object.keys(s.val())[0]).update(cData); }
             });
-
             if(id) db.ref('repairs/'+id).update(data).then(() => closeModal('edit-modal'));
             else { data.bay = "0"; db.ref('repairs').push(data).then(() => closeModal('edit-modal')); }
         }
-
-        // 기존 V4.8 로직 (initDraggable, initCalendar, releaseVehicle 등) 완벽 유지
-        function initDraggable() {
-            document.querySelectorAll('.dr-zone').forEach(el => {
-                new Sortable(el, { group: 'vehicles', animation: 200, delay: 150, delayOnTouchOnly: true, onEnd: (evt) => {
-                    const id = evt.item.querySelector('[onclick]')?.getAttribute('onclick').match(/'([^']+)'/)[1] || evt.item.getAttribute('onclick').match(/'([^']+)'/)[1];
-                    let bay = evt.to.getAttribute('data-bay');
-                    if(bay.includes('-')) bay = "0"; 
-                    db.ref('repairs/' + id).update({ bay });
-                }});
-            });
-        }
         function releaseVehicle() {
             const id = document.getElementById('m-id').value;
-            if(!id) return;
             db.ref('repairs/'+id).once('value', s => {
                 const d = s.val();
                 db.ref('customers').orderByChild('carNo').equalTo(d.carNo).once('value', cs => {
-                    if(cs.exists()){
-                        const cKey = Object.keys(cs.val())[0];
-                        db.ref('customers/'+cKey+'/history').push({ date: d.date, desc: d.desc, km: d.km, mechanic: d.mechanic });
-                    }
+                    if(cs.exists()) db.ref('customers/'+Object.keys(cs.val())[0]+'/history').push({ date: d.date, desc: d.desc, km: d.km, mechanic: d.mechanic });
                 });
-                db.ref('repairs/'+id).remove().then(() => { alert("출고완료/이력저장"); closeModal('edit-modal'); });
+                db.ref('repairs/'+id).remove().then(() => { alert("출고완료"); closeModal('edit-modal'); });
             });
-        }
-        function openEditModal(id) {
-            document.getElementById('m-id').value = id || "";
-            document.getElementById('rel-btn').style.display = id ? "block" : "none";
-            if(id) {
-                db.ref('repairs/'+id).once('value', s => {
-                    const d = s.val();
-                    document.getElementById('m-car').value = d.carNo; document.getElementById('m-name').value = d.name;
-                    document.getElementById('m-phone').value = d.phone; document.getElementById('m-mechanic').value = d.mechanic || "";
-                    document.getElementById('m-date').value = d.date; document.getElementById('m-time').value = d.r_time;
-                    document.getElementById('m-model').value = d.model; document.getElementById('m-km').value = d.km;
-                    document.getElementById('m-desc').value = d.desc; document.getElementById('m-first-date').value = d.firstDate || "";
-                    document.getElementById('m-vin').value = d.vin || "";
-                });
-            } else { document.querySelectorAll('#edit-modal input, #edit-modal textarea').forEach(i => i.value = ""); }
-            document.getElementById('edit-modal').style.display = 'flex';
         }
         function fetchInfo(carNo, prefix) {
             if(carNo.length < 4) return;
             db.ref('customers').orderByChild('carNo').equalTo(carNo.toUpperCase()).once('value', s => {
                 if(s.exists()){
                     const d = Object.values(s.val())[0];
-                    document.getElementById(prefix+'-name').value = d.name;
-                    document.getElementById(prefix+'-phone').value = d.phone;
-                    document.getElementById(prefix+'-model').value = d.model || "";
-                    document.getElementById(prefix+'-first-date').value = d.firstDate || "";
-                    document.getElementById(prefix+'-vin').value = d.vin || "";
+                    document.getElementById(prefix+'-name').value = d.name; document.getElementById(prefix+'-phone').value = d.phone;
+                    document.getElementById(prefix+'-model').value = d.model; document.getElementById(prefix+'-first-date').value = d.firstDate;
+                    document.getElementById(prefix+'-vin').value = d.vin;
                 }
+            });
+        }
+        function initDraggable() {
+            document.querySelectorAll('.dr-zone').forEach(el => {
+                new Sortable(el, { group: 'vehicles', animation: 200, delay: 150, delayOnTouchOnly: true, onEnd: (evt) => {
+                    const id = evt.item.querySelector('[onclick]')?.getAttribute('onclick').match(/'([^']+)'/)[1] || evt.item.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    db.ref('repairs/' + id).update({ bay: evt.to.getAttribute('data-bay').includes('-') ? "0" : evt.to.getAttribute('data-bay') });
+                }});
             });
         }
         function syncCustomerDB(key) {
@@ -317,40 +312,15 @@
                     if(d.carNo.includes(key.toUpperCase()) || d.name.includes(key)) {
                         grid.innerHTML += `<div class="bg-slate-800 p-4 rounded-2xl border border-white/5" onclick="openCustomerModal('${c.key}')">
                             <p class="text-amber-500 font-black text-sm uppercase">${d.carNo}</p>
-                            <p class="text-[10px] text-slate-300 font-bold">${d.name} | ${d.vin||'VIN없음'}</p>
+                            <p class="text-[10px] text-slate-300 font-bold">${d.name} | ${d.model||'모델미상'}</p>
                         </div>`;
                     }
                 });
             });
         }
-        function openCustomerModal(id) {
-            document.getElementById('c-id').value = id;
-            db.ref('customers/'+id).once('value', s => {
-                const d = s.val();
-                document.getElementById('c-car').value = d.carNo; document.getElementById('c-name').value = d.name;
-                document.getElementById('c-phone').value = d.phone; document.getElementById('c-vin').value = d.vin || "";
-                document.getElementById('c-first-date').value = d.firstDate || "";
-                const hList = document.getElementById('c-history-list'); hList.innerHTML = "";
-                if(d.history) Object.values(d.history).reverse().forEach(h => {
-                    hList.innerHTML += `<div class="bg-slate-900/50 p-2 rounded-lg border border-white/5"><b>[${h.date}]</b> 담당: ${h.mechanic||'-'} <br> ${h.desc}</div>`;
-                });
-            });
-            document.getElementById('c-modal').style.display = 'flex';
-        }
         function saveCustomer() {
             const id = document.getElementById('c-id').value;
-            db.ref('customers/'+id).update({ 
-                carNo: document.getElementById('c-car').value.toUpperCase(), name: document.getElementById('c-name').value, 
-                phone: document.getElementById('c-phone').value, vin: document.getElementById('c-vin').value.toUpperCase(),
-                firstDate: document.getElementById('c-first-date').value
-            }).then(() => closeModal('c-modal'));
-        }
-        function toggleResMode(m) {
-            document.getElementById('cal-view').style.display = (m==='cal'?'block':'none');
-            document.getElementById('list-view').style.display = (m==='list'?'block':'none');
-            document.getElementById('btn-m-cal').className = (m==='cal') ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
-            document.getElementById('btn-m-list').className = (m==='list') ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
-            if(m==='cal') calendar.render();
+            db.ref('customers/'+id).update({ carNo: document.getElementById('c-car').value.toUpperCase(), name: document.getElementById('c-name').value, phone: document.getElementById('c-phone').value, vin: document.getElementById('c-vin').value.toUpperCase(), firstDate: document.getElementById('c-first-date').value }).then(() => closeModal('c-modal'));
         }
         function initCalendar() {
             calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
@@ -359,6 +329,13 @@
                 eventClick: (info) => openEditModal(info.event.id)
             });
             calendar.render();
+        }
+        function toggleResMode(m) {
+            document.getElementById('cal-view').style.display = (m==='cal'?'block':'none');
+            document.getElementById('list-view').style.display = (m==='list'?'block':'none');
+            document.getElementById('btn-m-cal').className = (m==='cal') ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
+            document.getElementById('btn-m-list').className = (m==='list') ? 'bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold' : 'bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold';
+            if(m==='cal') calendar.render();
         }
         function showTab(id) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
